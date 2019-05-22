@@ -7,7 +7,7 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
 
     result_pub_ = node_handle_.advertise<std_msgs::Bool>("kal3/sign_detection/result", 10);
     detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("kal3/sign_detection/detected_image", 10);
-    image_sub_ = node_handle_.subscribe("/kinect2/hd/image_color", 10, &SignDetection::imageCb, this);
+    image_sub_ = node_handle_.subscribe("/kinect2/hd/image_color", 1, &SignDetection::imageCb, this);
 }
 
 void SignDetection::imageCb(const sensor_msgs::Image::ConstPtr& msg)
