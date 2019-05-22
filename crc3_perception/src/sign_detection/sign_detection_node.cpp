@@ -1,21 +1,23 @@
 #include "sign_detection.h"
 #include <cstdio>
 
-SignDetection::SignDetection(ros::NodeHandle& node_handle) : node_handle_(node_handle) {
-
+SignDetection::SignDetection(ros::NodeHandle& node_handle)
+    : node_handle_(node_handle)
+{
 
     result_pub_ = node_handle_.advertise<std_msgs::Bool>("kal3/sign_detection/result", 10);
     detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("kal3/sign_detection/detected_image", 10);
-    image_sub_ = node_handle_.subscribe("/camera/rgb/image_raw", 10, &SignDetection::imageCb, this);
+    image_sub_ = node_handle_.subscribe("/kinect2/hd/image_color", 10, &SignDetection::imageCb, this);
 }
 
-void SignDetection::imageCb(const sensor_msgs::Image::ConstPtr& msg) {
+void SignDetection::imageCb(const sensor_msgs::Image::ConstPtr& msg)
+{
 
     cv::Mat cvframe(msg->height,
-                    msg->width,
-                    encoding2mat_type(msg->encoding),
-                    const_cast<unsigned char*>(msg->data.data()),
-                    msg->step);
+        msg->width,
+        encoding2mat_type(msg->encoding),
+        const_cast<unsigned char*>(msg->data.data()),
+        msg->step);
 
     if (msg->encoding == "rgb8") {
         cv::cvtColor(cvframe, cvframe, cv::COLOR_RGB2BGR);
@@ -23,7 +25,8 @@ void SignDetection::imageCb(const sensor_msgs::Image::ConstPtr& msg) {
 
     detect_image(cvframe, modelWeights_, modelConfiguration_, classesFile_);
 }
-int SignDetection::encoding2mat_type(const std::string& encoding) {
+int SignDetection::encoding2mat_type(const std::string& encoding)
+{
     if (encoding == "mono8") {
         return CV_8UC1;
     } else if (encoding == "bgr8") {
@@ -43,7 +46,8 @@ int SignDetection::encoding2mat_type(const std::string& encoding) {
     }
 }
 
-void SignDetection::detect_image(Mat& cvframe, string modelWeights, string modelConfiguration, string classesFile) {
+void SignDetection::detect_image(Mat& cvframe, string modelWeights, string modelConfiguration, string classesFile)
+{
 
     // Load names of classes
     ifstream ifs(classesFile.c_str());
@@ -99,7 +103,8 @@ void SignDetection::detect_image(Mat& cvframe, string modelWeights, string model
     cv::waitKey(30);
 }
 
-void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs) {
+void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
+{
 
     vector<int> classIds;
     vector<float> confidences;
@@ -142,7 +147,8 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs) {
     }
 }
 
-void SignDetection::drawPred(int classId, float conf, int left, int top, int right, int bottom, Mat& frame) {
+void SignDetection::drawPred(int classId, float conf, int left, int top, int right, int bottom, Mat& frame)
+{
 
     // Draw a rectangle displaying the bounding box
     rectangle(frame, Point(left, top), Point(right, bottom), Scalar(255, 178, 50), 3);
@@ -159,15 +165,16 @@ void SignDetection::drawPred(int classId, float conf, int left, int top, int rig
     Size labelSize = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
     top = max(top, labelSize.height);
     rectangle(frame,
-              Point(left, top - round(1.5 * labelSize.height)),
-              Point(left + round(1.5 * labelSize.width), top + baseLine),
-              Scalar(255, 255, 255),
-              FILLED);
+        Point(left, top - round(1.5 * labelSize.height)),
+        Point(left + round(1.5 * labelSize.width), top + baseLine),
+        Scalar(255, 255, 255),
+        FILLED);
 
     putText(frame, label, Point(left, top), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 0), 1);
 }
 
-vector<String> SignDetection::getOutputsNames(const Net& net) {
+vector<String> SignDetection::getOutputsNames(const Net& net)
+{
     static vector<String> names;
     if (names.empty()) {
         // Get the indices of the output layers, i.e. the layers with unconnected outputs
@@ -183,7 +190,8 @@ vector<String> SignDetection::getOutputsNames(const Net& net) {
     }
     return names;
 }
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     ros::init(argc, argv, "kal3_traffic_sign_detection");
     ros::NodeHandle nh("~");
 
