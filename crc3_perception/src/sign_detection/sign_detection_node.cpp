@@ -5,8 +5,8 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
     : node_handle_(node_handle)
 {
 
-    result_pub_ = node_handle_.advertise<std_msgs::Bool>("kal3/sign_detection/result", 10);
-    detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("kal3/sign_detection/detected_image", 10);
+    result_pub_ = node_handle_.advertise<std_msgs::Bool>("/result", 1);
+    detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("/detected_image", 10);
     image_sub_ = node_handle_.subscribe("/kinect2/hd/image_color", 1, &SignDetection::imageCb, this);
 }
 
@@ -92,7 +92,7 @@ void SignDetection::detect_image(Mat& cvframe, string modelWeights, string model
     //imshow(kWinName, frame);
     cv_bridge::CvImage out_msg;
     out_msg.header = header;
-    out_msg.encoding = sensor_msgs::image_encodings::RGB8;
+    out_msg.encoding = sensor_msgs::image_encodings::BGR8;
     out_msg.image = frame;
     // sensor_msgs::msg::Image img_msg; // >> message to be sent
 
@@ -164,16 +164,16 @@ void SignDetection::drawPred(int classId, float conf, int left, int top, int rig
     }
 
     // Display the label at the top of the bounding box
-    int baseLine;
-    Size labelSize = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-    top = max(top, labelSize.height);
-    rectangle(frame,
-        Point(left, top - round(1.5 * labelSize.height)),
-        Point(left + round(1.5 * labelSize.width), top + baseLine),
-        Scalar(255, 255, 255),
-        FILLED);
+    //int baseLine;
+    //Size labelSize = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+    //top = max(top, labelSize.height);
+    //rectangle(frame,
+    //    Point(left, top - round(1.5 * labelSize.height)),
+    //    Point(left + round(1.5 * labelSize.width), top + baseLine),
+    //    Scalar(255, 255, 255),
+    //    FILLED);
 
-    putText(frame, label, Point(left, top), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 0), 1);
+    putText(frame, label, Point(left, top - 5), FONT_HERSHEY_SIMPLEX, 0.9, Scalar(0, 0, 255), 2);
 }
 
 vector<String> SignDetection::getOutputsNames(const Net& net)
