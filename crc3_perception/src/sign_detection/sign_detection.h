@@ -1,11 +1,11 @@
 #ifndef SCREW_DETECTION_H
 #define SCREW_DETECTION_H
 
+#include <string>
 #include <ros/package.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
 #include <std_msgs/Bool.h>
-#include <string>
 
 #include <fstream>
 #include <iostream>
@@ -30,14 +30,14 @@ private:
     ros::Publisher detected_image_pub_;
     ros::Subscriber image_sub_;
 
-    //const string pro_dir_ = "/home/wu/kal_ws/anicar3_kal3/src/crc3_src/crc3_perception/src/sign_detection";
-    //const String modelConfiguration_ = pro_dir_ + "/data_file/yolov3.cfg";
-    //const string classesFile_ = pro_dir_ + "/data_file/coco.names";
-    //const String modelWeights_ = pro_dir_ + "/data_file/yolov3.weights";
+    // const string pro_dir_ = "/home/wu/kal_ws/anicar3_kal3/src/crc3_src/crc3_perception/src/sign_detection";
+    // const String modelConfiguration_ = pro_dir_ + "/data_file/yolov3.cfg";
+    // const string classesFile_ = pro_dir_ + "/data_file/coco.names";
+    // const String modelWeights_ = pro_dir_ + "/data_file/yolov3.weights";
     const string pro_dir_ = ros::package::getPath("crc3_perception");
-    const String modelConfiguration_ = pro_dir_ + "/src/sign_detection/data_file/yolov3-tiny.cfg";
-    const string classesFile_ = pro_dir_ + "/src/sign_detection/data_file/coco.names";
-    const String modelWeights_ = pro_dir_ + "/src/sign_detection/data_file/yolov3-tiny.weights";
+    const String modelConfiguration_ = pro_dir_ + "/src/sign_detection/data_file/sign_tiny.cfg";
+    const string classesFile_ = pro_dir_ + "/src/sign_detection/data_file/sign.names";
+    const String modelWeights_ = pro_dir_ + "/src/sign_detection/data_file/sign_tiny_final.weights";
 
     const float confThreshold_ = 0.5; // Confidence threshold
     const float nmsThreshold_ = 0.4;  // Non-maximum suppression threshold
