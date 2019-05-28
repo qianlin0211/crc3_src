@@ -23,7 +23,7 @@ void SignDetection::imageCb(const sensor_msgs::Image::ConstPtr& msg)
         cv::cvtColor(cvframe, cvframe, cv::COLOR_RGB2BGR);
     }
 
-    detect_image(cvframe, modelWeights_, modelConfiguration_, classesFile_);
+    detect_image(cvframe, modelWeights_, modelConfiguration_, classesFile_, msg->header);
 }
 int SignDetection::encoding2mat_type(const std::string& encoding)
 {
@@ -46,7 +46,7 @@ int SignDetection::encoding2mat_type(const std::string& encoding)
     }
 }
 
-void SignDetection::detect_image(Mat& cvframe, string modelWeights, string modelConfiguration, string classesFile)
+void SignDetection::detect_image(Mat& cvframe, string modelWeights, string modelConfiguration, string classesFile, std_msgs::Header header)
 {
 
     // Load names of classes
@@ -89,18 +89,21 @@ void SignDetection::detect_image(Mat& cvframe, string modelWeights, string model
     string label = format("Inference time for a frame : %.2f ms", t);
     putText(frame, label, Point(0, 15), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255));
     // Write the frame with the detection boxes
-    imshow(kWinName, frame);
-    // cv_bridge::CvImage img_bridge;
+    //imshow(kWinName, frame);
+    cv_bridge::CvImage out_msg;
+    out_msg.header = header;
+    out_msg.encoding = sensor_msgs::image_encodings::RGB8;
+    out_msg.image = frame;
     // sensor_msgs::msg::Image img_msg; // >> message to be sent
 
-    // std_msgs::msg::Header header;       // empty header
-    // header.seq = counter;               // user defined counter
-    // header.stamp = rclcpp::Time::now(); // time
-    // img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::RGB8, img);
+    //std_msgs::msg::Header header;       // empty header
+    //header.seq = counter;               // user defined counter
+    //header.stamp = rclcpp::Time::now(); // time
+    //out_msg = cv_bridge::CvImage(header, sensor_msgs::image_encodings::RGB8, frame);
     // img_bridge.toImageMsg(img_msg); // from cv_bridge to sensor_msgs::Image
-    // pub_img.publish(img_msg);
+    detected_image_pub_.publish(out_msg.toImageMsg());
 
-    cv::waitKey(30);
+    //cv::waitKey(30);
 }
 
 void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
@@ -197,6 +200,6 @@ int main(int argc, char** argv)
 
     SignDetection node(nh);
     ros::spin();
-    cv::waitKey(0);
+    //cv::waitKey(0);
     return 0;
 }

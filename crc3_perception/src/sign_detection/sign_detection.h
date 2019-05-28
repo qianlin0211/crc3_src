@@ -1,11 +1,14 @@
 #ifndef SCREW_DETECTION_H
 #define SCREW_DETECTION_H
 
-#include <string>
+#include <cv_bridge/cv_bridge.h>
 #include <ros/package.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
+#include <sensor_msgs/image_encodings.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Header.h>
+#include <string>
 
 #include <fstream>
 #include <iostream>
@@ -48,7 +51,7 @@ private:
     void imageCb(const sensor_msgs::Image::ConstPtr& msg);
     void drawPred(int classId, float conf, int left, int top, int right, int bottom, Mat& frame);
     vector<String> getOutputsNames(const Net& net);
-    void detect_image(Mat& cvframe, string modelWeights, string modelConfiguration, string classesFile);
+    void detect_image(Mat& cvframe, string modelWeights, string modelConfiguration, string classesFile, std_msgs::Header header);
     void postprocess(Mat& frame, const vector<Mat>& outs);
     int encoding2mat_type(const std::string& encoding);
 };
