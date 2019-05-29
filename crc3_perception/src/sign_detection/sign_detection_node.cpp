@@ -154,7 +154,7 @@ void SignDetection::drawPred(int classId, float conf, int left, int top, int rig
 {
 
     // Draw a rectangle displaying the bounding box
-    rectangle(frame, Point(left, top), Point(right, bottom), Scalar(255, 178, 50), 3);
+    rectangle(frame, Point(left, top), Point(right, bottom), Scalar(0, 255, 0), 3);
 
     // Get the label for the class name and its confidence
     string label = format("%.2f", conf);
@@ -173,7 +173,7 @@ void SignDetection::drawPred(int classId, float conf, int left, int top, int rig
     //    Scalar(255, 255, 255),
     //    FILLED);
 
-    putText(frame, label, Point(left, top - 5), FONT_HERSHEY_SIMPLEX, 0.9, Scalar(0, 0, 255), 2);
+    putText(frame, label, Point(left, top - 10), FONT_HERSHEY_SIMPLEX, 1.2, Scalar(0, 255, 0), 2);
 }
 
 vector<String> SignDetection::getOutputsNames(const Net& net)
