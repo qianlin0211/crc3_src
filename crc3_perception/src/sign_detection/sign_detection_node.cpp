@@ -7,7 +7,8 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
 
     result_pub_ = node_handle_.advertise<std_msgs::String>("/command", 1);
     detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("/detected_image", 1);
-    depth_image_sub_ = node_handle_.subscribe("/kinect2/sd/image_depth_rect", 1, &SignDetection::depthImageCb, this);
+    depth_image_sub_ = node_handle_.subscribe("/kinect2/hd/image_depth_rect", 1, &SignDetection::depthImageCb, this);
+
     image_sub_ = node_handle_.subscribe("/kinect2/hd/image_color", 1, &SignDetection::imageCb, this);
 }
 void SignDetection::depthImageCb(const sensor_msgs::Image::ConstPtr& msg)
@@ -20,10 +21,28 @@ void SignDetection::depthImageCb(const sensor_msgs::Image::ConstPtr& msg)
     }
 }
 
-float SignDetection::CaculateDepth(int center_x, int center_y)
+float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
 {
-    float depth = cv_depth_ptr_->image.at<float>(cv::Point(center_x, center_y));
-    return depth;
+    int mal = 0;
+    int l_x = c_x - w / 2;
+    int r_x = c_x + w / 2;
+    int t_y = c_y - h / 2;
+    int b_y = c_x + h / 2;
+    float sum_depth = 0.0;
+
+    for (int i = l_x; i < r_x; ++i) {
+        for (int j = t_y; j < b_y; ++j) {
+            float depth = cv_depth_ptr_->image.at<float>(cv::Point(i, j));
+            if (depth > 0) {
+                sum_depth += depth;
+                mal++;
+            }
+        }
+    }
+    if (mal > 0) {
+        return (1000 * sum_depth / mal);
+    }
+    return 0.0;
 }
 void SignDetection::imageCb(const sensor_msgs::Image::ConstPtr& msg)
 {
@@ -143,10 +162,10 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
             if (confidence > confThreshold_) {
                 int centerX = (int)(data[0] * frame.cols);
                 int centerY = (int)(data[1] * frame.rows);
-                float depth = CaculateDepth(centerX, centerY);
-                if (depth <= 4.0) {
-                    int width = (int)(data[2] * frame.cols);
-                    int height = (int)(data[3] * frame.rows);
+                int width = (int)(data[2] * frame.cols);
+                int height = (int)(data[3] * frame.rows);
+                float depth = CaculateDepth(centerX, centerY, width, height);
+                if (depth <= 1000.0) {
                     int left = centerX - width / 2;
                     int top = centerY - height / 2;
                     //add direction caculate finktion
