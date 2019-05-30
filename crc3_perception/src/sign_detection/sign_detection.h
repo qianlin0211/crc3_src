@@ -6,8 +6,8 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
-#include <std_msgs/Bool.h>
 #include <std_msgs/Header.h>
+#include <std_msgs/String.h>
 #include <string>
 
 #include <fstream>
@@ -32,27 +32,32 @@ private:
     ros::Publisher result_pub_;
     ros::Publisher detected_image_pub_;
     ros::Subscriber image_sub_;
+    ros::Subscriber depth_image_sub_;
+    cv_bridge::CvImagePtr cv_depth_ptr_;
 
     // const string pro_dir_ = "/home/wu/kal_ws/anicar3_kal3/src/crc3_src/crc3_perception/src/sign_detection";
     // const String modelConfiguration_ = pro_dir_ + "/data_file/yolov3.cfg";
     // const string classesFile_ = pro_dir_ + "/data_file/coco.names";
     // const String modelWeights_ = pro_dir_ + "/data_file/yolov3.weights";
-    const string pro_dir_ = ros::package::getPath("crc3_perception");
+    const string pro_dir_
+        = ros::package::getPath("crc3_perception");
     const String modelConfiguration_ = pro_dir_ + "/src/sign_detection/data_file/sign_tiny.cfg";
     const string classesFile_ = pro_dir_ + "/src/sign_detection/data_file/sign.names";
     const String modelWeights_ = pro_dir_ + "/src/sign_detection/data_file/sign_tiny_final.weights";
 
-    const float confThreshold_ = 0.5; // Confidence threshold
+    const float confThreshold_ = 0.7; // Confidence threshold
     const float nmsThreshold_ = 0.4;  // Non-maximum suppression threshold
     const int inpWidth_ = 416;        // Width of network's input image
     const int inpHeight_ = 416;       // Height of network's input image
     vector<string> classes_;
 
     void imageCb(const sensor_msgs::Image::ConstPtr& msg);
-    void drawPred(int classId, float conf, int left, int top, int right, int bottom, Mat& frame);
+    void depthImageCb(const sensor_msgs::Image::ConstPtr& msg);
+    void drawPred(int classId, float conf, int left, int top, int right, int bottom, Mat& frame, float distance);
     vector<String> getOutputsNames(const Net& net);
     void detect_image(Mat& cvframe, string modelWeights, string modelConfiguration, string classesFile, std_msgs::Header header);
     void postprocess(Mat& frame, const vector<Mat>& outs);
     int encoding2mat_type(const std::string& encoding);
+    float CaculateDepth(int center_x, int center_y);
 };
 #endif
