@@ -7,7 +7,7 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
 
     result_pub_ = node_handle_.advertise<std_msgs::String>("/command", 1);
     detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("/detected_image", 1);
-    depth_image_sub_ = node_handle_.subscribe("/kinect2/hd/image_depth_rect", 1, &SignDetection::depthImageCb, this);
+    depth_image_sub_ = node_handle_.subscribe("/kinect2/sd/image_depth_rect", 1, &SignDetection::depthImageCb, this);
 
     image_sub_ = node_handle_.subscribe("/kinect2/hd/image_color", 1, &SignDetection::imageCb, this);
 }
