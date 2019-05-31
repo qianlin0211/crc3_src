@@ -45,7 +45,7 @@ private:
     const string classesFile_ = pro_dir_ + "/src/sign_detection/data_file/sign.names";
     const String modelWeights_ = pro_dir_ + "/src/sign_detection/data_file/sign_tiny_final.weights";
 
-    const float confThreshold_ = 0.7; // Confidence threshold
+    const float confThreshold_ = 0.5; // Confidence threshold
     const float nmsThreshold_ = 0.4;  // Non-maximum suppression threshold
     const int inpWidth_ = 416;        // Width of network's input image
     const int inpHeight_ = 416;       // Height of network's input image
