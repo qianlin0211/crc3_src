@@ -7,43 +7,18 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
 
     result_pub_ = node_handle_.advertise<std_msgs::String>("/command", 1);
     detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("/detected_image", 1);
-    depth_image_sub_ = node_handle_.subscribe("/kinect2/sd/image_depth_rect", 1, &SignDetection::depthImageCb, this);
 
     image_sub_ = node_handle_.subscribe("/kinect2/hd/image_color", 1, &SignDetection::imageCb, this);
-}
-void SignDetection::depthImageCb(const sensor_msgs::Image::ConstPtr& msg)
-{
-    try {
-        cv_depth_ptr_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
-    } catch (cv_bridge::Exception& e) {
-        ROS_ERROR("cv_bridge exception:%s", e.what());
-        return;
-    }
 }
 
 float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
 {
-    int mal = 0;
-    int l_x = c_x - w / 2;
-    int r_x = c_x + w / 2;
-    int t_y = c_y - h / 2;
-    int b_y = c_x + h / 2;
-    float sum_depth = 0.0;
-
-    for (int i = l_x; i < r_x; ++i) {
-        for (int j = t_y; j < b_y; ++j) {
-            float depth = cv_depth_ptr_->image.at<float>(cv::Point(i, j));
-            if (depth > 0) {
-                sum_depth += depth;
-                mal++;
-            }
-        }
-    }
     //if (mal > 0) {
     //  return (1000 * sum_depth / mal);
     //}
-    float s = ((-1 * w * h / 10000 + 10.1) / 5);
-    return s;
+    float s = w * h;
+    float depth = (-3.992e-13 * s * s * s + 2.358e-08 * s * s - 0.0004742 * s + 4.727);
+    return depth;
 }
 void SignDetection::imageCb(const sensor_msgs::Image::ConstPtr& msg)
 {
@@ -166,7 +141,7 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
                 int width = (int)(data[2] * frame.cols);
                 int height = (int)(data[3] * frame.rows);
                 float depth = CaculateDepth(centerX, centerY, width, height);
-                if (depth <= 2.0) {
+                if (depth <= 10.0) {
                     int left = centerX - width / 2;
                     int top = centerY - height / 2;
                     //add direction caculate finktion

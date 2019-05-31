@@ -32,8 +32,6 @@ private:
     ros::Publisher result_pub_;
     ros::Publisher detected_image_pub_;
     ros::Subscriber image_sub_;
-    ros::Subscriber depth_image_sub_;
-    cv_bridge::CvImagePtr cv_depth_ptr_;
 
     // const string pro_dir_ = "/home/wu/kal_ws/anicar3_kal3/src/crc3_src/crc3_perception/src/sign_detection";
     // const String modelConfiguration_ = pro_dir_ + "/data_file/yolov3.cfg";
@@ -52,7 +50,6 @@ private:
     vector<string> classes_;
 
     void imageCb(const sensor_msgs::Image::ConstPtr& msg);
-    void depthImageCb(const sensor_msgs::Image::ConstPtr& msg);
     void drawPred(int classId, float conf, int left, int top, int right, int bottom, Mat& frame, float distance);
     vector<String> getOutputsNames(const Net& net);
     void detect_image(Mat& cvframe, string modelWeights, string modelConfiguration, string classesFile, std_msgs::Header header);
