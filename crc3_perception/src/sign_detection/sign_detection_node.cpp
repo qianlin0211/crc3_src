@@ -3,22 +3,14 @@
 
 SignDetection::SignDetection(ros::NodeHandle& node_handle)
     : node_handle_(node_handle)
+    , image_color_sub_(node_handle_, "/kinect2/hd/image_color", 1)
+    , image_depth_sub_(node_handle_, "/kinect2/sd/image_depth_rect", 1)
+    , sync(MySyncPolicy(10), image_color_sub_, image_depth_sub_)
 {
 
     result_pub_ = node_handle_.advertise<std_msgs::String>("/command", 1);
     detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("/detected_image", 1);
-    depth_image_sub_ = node_handle_.subscribe("/kinect2/sd/image_depth_rect", 1, &SignDetection::depthImageCb, this);
-
-    image_sub_ = node_handle_.subscribe("/kinect2/hd/image_color", 1, &SignDetection::imageCb, this);
-}
-void SignDetection::depthImageCb(const sensor_msgs::Image::ConstPtr& msg)
-{
-    try {
-        cv_depth_ptr_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
-    } catch (cv_bridge::Exception& e) {
-        ROS_ERROR("cv_bridge exception:%s", e.what());
-        return;
-    }
+    sync.registerCallback(boost::bind(&SignDetection::Callback, this, _1, _2));
 }
 
 float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
@@ -32,33 +24,17 @@ float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
 
     for (int i = l_x; i < r_x; ++i) {
         for (int j = t_y; j < b_y; ++j) {
-            float depth = cv_depth_ptr_->image.at<float>(cv::Point(i, j));
+            float depth = image_depth_.at<short int>(cv::Point(i, j)) / 1000.0;
             if (depth > 0) {
                 sum_depth += depth;
                 mal++;
             }
         }
     }
-    //if (mal > 0) {
-    //  return (1000 * sum_depth / mal);
-    //}
-    float s = ((-1 * w * h / 10000 + 10.1) / 5);
-    return s;
-}
-void SignDetection::imageCb(const sensor_msgs::Image::ConstPtr& msg)
-{
-
-    cv::Mat cvframe(msg->height,
-        msg->width,
-        encoding2mat_type(msg->encoding),
-        const_cast<unsigned char*>(msg->data.data()),
-        msg->step);
-
-    if (msg->encoding == "rgb8") {
-        cv::cvtColor(cvframe, cvframe, cv::COLOR_RGB2BGR);
+    if (mal > 0) {
+        return (sum_depth / mal);
     }
-
-    detect_image(cvframe, modelWeights_, modelConfiguration_, classesFile_, msg->header);
+    return 0.0;
 }
 int SignDetection::encoding2mat_type(const std::string& encoding)
 {
@@ -79,6 +55,27 @@ int SignDetection::encoding2mat_type(const std::string& encoding)
     } else {
         throw std::runtime_error("Unsupported encoding type");
     }
+}
+void SignDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sensor_msgs::Image::ConstPtr& image_depth_msg)
+{
+    std::cout << msg->encoding << std::endl;
+    cv::Mat cvframe(msg->height,
+        msg->width,
+        encoding2mat_type(msg->encoding),
+        const_cast<unsigned char*>(msg->data.data()),
+        msg->step);
+
+    if (msg->encoding == "rgb8") {
+        cv::cvtColor(cvframe, cvframe, cv::COLOR_RGB2BGR);
+    }
+    try {
+        image_depth_ = cv_bridge::toCvCopy(image_depth_msg)->image;
+    } catch (cv_bridge::Exception& e) {
+        ROS_ERROR("cv_bridge exception:%s", e.what());
+        return;
+    }
+
+    detect_image(cvframe, modelWeights_, modelConfiguration_, classesFile_, msg->header);
 }
 
 void SignDetection::detect_image(Mat& cvframe, string modelWeights, string modelConfiguration, string classesFile, std_msgs::Header header)
@@ -166,7 +163,7 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
                 int width = (int)(data[2] * frame.cols);
                 int height = (int)(data[3] * frame.rows);
                 float depth = CaculateDepth(centerX, centerY, width, height);
-                if (depth <= 2.0) {
+                if (depth <= 10000.0) {
                     int left = centerX - width / 2;
                     int top = centerY - height / 2;
                     //add direction caculate finktion
