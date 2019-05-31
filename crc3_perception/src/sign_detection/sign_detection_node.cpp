@@ -42,7 +42,8 @@ float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
     //if (mal > 0) {
     //  return (1000 * sum_depth / mal);
     //}
-    float s = ((-1 * w * h / 10000 + 10.1) / 5);
+    //float s = ((-1 * w * h / 10000 + 10.1) / 5);
+    float s = w * h;
     return s;
 }
 void SignDetection::imageCb(const sensor_msgs::Image::ConstPtr& msg)
@@ -166,7 +167,7 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
                 int width = (int)(data[2] * frame.cols);
                 int height = (int)(data[3] * frame.rows);
                 float depth = CaculateDepth(centerX, centerY, width, height);
-                if (depth <= 2.0) {
+                if (depth <= 100000000000000.0) {
                     int left = centerX - width / 2;
                     int top = centerY - height / 2;
                     //add direction caculate finktion
