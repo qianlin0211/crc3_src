@@ -17,7 +17,8 @@ float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
     //  return (1000 * sum_depth / mal);
     //}
     float s = w * h;
-    float depth = (-3.992e-13 * s * s * s + 2.358e-08 * s * s - 0.0004742 * s + 4.727);
+    float depth = (-2.935e-14 * s * s * s + 4.782e-09 * s * s - 0.0002067 * s + 3.729);
+    //float s = ((-1 * w * h / 10000 + 10.1) / 5);
     return depth;
 }
 void SignDetection::imageCb(const sensor_msgs::Image::ConstPtr& msg)
