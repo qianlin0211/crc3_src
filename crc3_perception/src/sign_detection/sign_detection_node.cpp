@@ -19,7 +19,7 @@ float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
     int l_x = c_x - w / 2;
     int r_x = c_x + w / 2;
     int t_y = c_y - h / 2;
-    int b_y = c_x + h / 2;
+    int b_y = c_y + h / 2;
     float sum_depth = 0.0;
 
     for (int i = l_x; i < r_x; ++i) {
