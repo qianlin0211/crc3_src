@@ -7,23 +7,12 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
 
     result_pub_ = node_handle_.advertise<std_msgs::String>("/command", 1);
     detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("/detected_image", 1);
-    depth_image_sub_ = node_handle_.subscribe("/kinect2/sd/image_depth_rect", 1, &SignDetection::depthImageCb, this);
 
     image_sub_ = node_handle_.subscribe("/kinect2/hd/image_color", 1, &SignDetection::imageCb, this);
 }
-void SignDetection::depthImageCb(const sensor_msgs::Image::ConstPtr& msg)
-{
-    try {
-        cv_depth_ptr_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
-    } catch (cv_bridge::Exception& e) {
-        ROS_ERROR("cv_bridge exception:%s", e.what());
-        return;
-    }
-}
 
-float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
+int SignDetection::CaculateDirection(int c_x, int c_y, int w, int h)
 {
-    int mal = 0;
     int l_x = c_x - w / 2;
     int r_x = c_x + w / 2;
     int t_y = c_y - h / 2;
@@ -39,12 +28,16 @@ float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
             }
         }
     }
+}
+float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
+{
     //if (mal > 0) {
     //  return (1000 * sum_depth / mal);
     //}
-    //float s = ((-1 * w * h / 10000 + 10.1) / 5);
+
     float s = w * h;
-    return s;
+    float depth = (-2.935e-14 * s * s * s + 4.782e-09 * s * s - 0.0002067 * s + 3.729); //float s = ((-1 * w * h / 10000 + 10.1) / 5);
+    return depth;
 }
 void SignDetection::imageCb(const sensor_msgs::Image::ConstPtr& msg)
 {
@@ -167,10 +160,17 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
                 int width = (int)(data[2] * frame.cols);
                 int height = (int)(data[3] * frame.rows);
                 float depth = CaculateDepth(centerX, centerY, width, height);
-                if (depth <= 100000000000000.0) {
-                    int left = centerX - width / 2;
-                    int top = centerY - height / 2;
-                    //add direction caculate finktion
+                if (depth <= 100000.0) {
+                    if (classIdPoint.x == 1) {
+                        int left = centerX - width / 2;
+                        int top = centerY - height / 2;
+                        int directionId = CaculateDirection(centerX, centerY, width, height);
+                        //add direction caculate finktion
+                        classIds.push_back(directionId);
+                        confidences.push_back((float)confidence);
+                        boxes.push_back(Rect(left, top, width, height));
+                        depth_vec.push_back(depth);
+                    }
                     classIds.push_back(classIdPoint.x);
                     confidences.push_back((float)confidence);
                     boxes.push_back(Rect(left, top, width, height));
