@@ -36,8 +36,8 @@ int SignDetection::CaculateDirection(int c_x, int c_y, int w, int h)
 
     for (int i = l_x; i < r_x; ++i) {
         for (int j = t_y; j < b_y; ++j) {
-            unsigned char gray_value = image_gray_.at<uchar>(cv::Point(i, j));
-            if (gray_value > 180) {
+            cv::Vec3b value = image_color_.at<cv::Vec3b>(cv::Point(i, j));
+            if (value[0] > 180 && value[1] > 180 && value[2] > 180) {
                 sum_white_x += i;
                 sum_white_y += j;
                 mal += 1;
@@ -93,7 +93,7 @@ float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
 void SignDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sensor_msgs::Image::ConstPtr& image_depth_msg)
 {
     cv::Mat cvframe = cv_bridge::toCvCopy(msg)->image;
-    cvtColor(cvframe, image_gray_, CV_BGR2GRAY);
+    image_color_ = cvframe;
     //static const std::string OPENCV_WINDOW = "Image window";
     //cv::namedWindow(OPENCV_WINDOW);
     //cv::imshow(OPENCV_WINDOW, image_gray_);

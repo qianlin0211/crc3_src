@@ -39,7 +39,7 @@ private:
     ros::Publisher result_pub_;
     ros::Publisher detected_image_pub_;
     cv::Mat image_depth_;
-    cv::Mat image_gray_;
+    cv::Mat image_color_;
     message_filters::Subscriber<sensor_msgs::Image> image_color_sub_;
     message_filters::Subscriber<sensor_msgs::Image> image_depth_sub_;
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> MySyncPolicy;
