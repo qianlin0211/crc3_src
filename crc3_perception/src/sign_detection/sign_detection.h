@@ -9,6 +9,7 @@
 #include <std_msgs/Header.h>
 #include <std_msgs/String.h>
 #include <string>
+#include <vector>
 
 #include <fstream>
 #include <iostream>
@@ -17,7 +18,9 @@
 #include <opencv2/dnn/dnn.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 
+#include <math.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/sync_policies/approximate_time.h>
 #include <message_filters/synchronizer.h>
@@ -47,9 +50,9 @@ private:
     // const String modelWeights_ = pro_dir_ + "/data_file/yolov3.weights";
     const string pro_dir_
         = ros::package::getPath("crc3_perception");
-    const String modelConfiguration_ = pro_dir_ + "/src/sign_detection/data_file/sign_tiny.cfg";
+    const String modelConfiguration_ = pro_dir_ + "/src/sign_detection/data_file/sign_tiny_2.cfg";
     const string classesFile_ = pro_dir_ + "/src/sign_detection/data_file/sign.names";
-    const String modelWeights_ = pro_dir_ + "/src/sign_detection/data_file/sign_tiny_final.weights";
+    const String modelWeights_ = pro_dir_ + "/src/sign_detection/data_file/sign_tiny_final_2.weights";
 
     const float confThreshold_ = 0.5; // Confidence threshold
     const float nmsThreshold_ = 0.4;  // Non-maximum suppression threshold
@@ -64,5 +67,6 @@ private:
     void postprocess(Mat& frame, const vector<Mat>& outs);
     float CaculateDepth(int c_x, int c_y, int w, int h);
     int CaculateDirection(int c_x, int c_y, int w, int h);
+    float getAngelOfTwoVector(Point2f& pt1, Point2f& pt2, Point2f& c);
 };
 #endif

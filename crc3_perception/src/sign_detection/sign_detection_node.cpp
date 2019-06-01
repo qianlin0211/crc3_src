@@ -13,8 +13,59 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
     sync.registerCallback(boost::bind(&SignDetection::Callback, this, _1, _2));
 }
 
+float SignDetection::getAngelOfTwoVector(Point2f& pt1, Point2f& pt2, Point2f& c)
+{
+    float theta = atan2(pt1.x - c.x, pt1.y - c.y) - atan2(pt2.x - c.x, pt2.y - c.y);
+    if (theta > CV_PI)
+        theta -= 2 * CV_PI;
+    if (theta < -CV_PI)
+        theta += 2 * CV_PI;
+
+    theta = theta * 180.0 / CV_PI;
+    return theta;
+}
 int SignDetection::CaculateDirection(int c_x, int c_y, int w, int h)
 {
+    int mal = 0;
+    int l_x = c_x - w / 2;
+    int r_x = c_x + w / 2;
+    int t_y = c_y - h / 2;
+    int b_y = c_y + h / 2;
+    int sum_white_x = 0;
+    int sum_white_y = 0;
+
+    for (int i = l_x; i < r_x; ++i) {
+        for (int j = t_y; j < b_y; ++j) {
+            unsigned char gray_value = image_gray_.at<uchar>(cv::Point(i, j));
+            if (gray_value > 180) {
+                sum_white_x += i;
+                sum_white_y += j;
+                mal += 1;
+            }
+        }
+    }
+    if (mal > 0) {
+        int white_x = (int)sum_white_x / mal;
+        int white_y = (int)sum_white_y / mal;
+        Point2f c(c_x, c_y);
+        Point2f pt1(c_x + 1, c_y);
+        Point2f pt2(white_x, white_y);
+
+        float theta = getAngelOfTwoVector(pt1, pt2, c);
+        if (theta < 70.0 && theta > -90.0) {
+            return 0;
+        }
+        if (theta < 110.0 && theta > 70.0) {
+            return 2;
+        }
+        if (theta < -90.0 || theta > 110.0) {
+            return 3;
+        }
+    }
+    return 2;
+
+    //std::cout << white_x - c_x << std::endl;
+    //std::cout << white_y - c_y << std::endl;
 }
 float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
 {
@@ -139,11 +190,19 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
                 int centerY = (int)(data[1] * frame.rows);
                 int width = (int)(data[2] * frame.cols);
                 int height = (int)(data[3] * frame.rows);
+                int left = centerX - width / 2;
+                int top = centerY - height / 2;
                 float depth = CaculateDepth(centerX, centerY, width, height);
                 if (depth <= 10000.0) {
-                    int left = centerX - width / 2;
-                    int top = centerY - height / 2;
-                    //add direction caculate finktion
+                    if (classIdPoint.x == 0) {
+                        //add direction caculate finktion
+                        int directId = CaculateDirection(centerX, centerY, width, height);
+
+                        classIds.push_back(directId);
+                        confidences.push_back((float)confidence);
+                        boxes.push_back(Rect(left, top, width, height));
+                        depth_vec.push_back(depth);
+                    }
                     classIds.push_back(classIdPoint.x);
                     confidences.push_back((float)confidence);
                     boxes.push_back(Rect(left, top, width, height));
