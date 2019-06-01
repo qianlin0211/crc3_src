@@ -3,8 +3,8 @@
 
 SignDetection::SignDetection(ros::NodeHandle& node_handle)
     : node_handle_(node_handle)
-    , image_color_sub_(node_handle_, "/kinect2/qhd/image_color_rect", 1)
-    , image_depth_sub_(node_handle_, "/kinect2/qhd/image_depth_rect", 1)
+    , image_color_sub_(node_handle_, "/kinect2/hd/image_color_rect", 1)
+    , image_depth_sub_(node_handle_, "/kinect2/hd/image_depth_rect", 1)
     , sync(MySyncPolicy(10), image_color_sub_, image_depth_sub_)
 {
 
@@ -58,7 +58,6 @@ int SignDetection::encoding2mat_type(const std::string& encoding)
 }
 void SignDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sensor_msgs::Image::ConstPtr& image_depth_msg)
 {
-    std::cout << msg->encoding << std::endl;
     cv::Mat cvframe(msg->height,
         msg->width,
         encoding2mat_type(msg->encoding),
