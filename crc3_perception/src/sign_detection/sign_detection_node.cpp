@@ -36,37 +36,14 @@ float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
     }
     return 0.0;
 }
-int SignDetection::encoding2mat_type(const std::string& encoding)
-{
-    if (encoding == "mono8") {
-        return CV_8UC1;
-    } else if (encoding == "bgr8") {
-        return CV_8UC3;
-    } else if (encoding == "mono16") {
-        return CV_16SC1;
-    } else if (encoding == "rgba8") {
-        return CV_8UC4;
-    } else if (encoding == "bgra8") {
-        return CV_8UC4;
-    } else if (encoding == "32FC1") {
-        return CV_32FC1;
-    } else if (encoding == "rgb8") {
-        return CV_8UC3;
-    } else {
-        throw std::runtime_error("Unsupported encoding type");
-    }
-}
 void SignDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sensor_msgs::Image::ConstPtr& image_depth_msg)
 {
-    cv::Mat cvframe(msg->height,
-        msg->width,
-        encoding2mat_type(msg->encoding),
-        const_cast<unsigned char*>(msg->data.data()),
-        msg->step);
-
-    if (msg->encoding == "rgb8") {
-        cv::cvtColor(cvframe, cvframe, cv::COLOR_RGB2BGR);
-    }
+    cv::Mat cvframe = cv_bridge::toCvCopy(msg)->image;
+    cvtColor(cvframe, image_gray_, CV_BGR2GRAY);
+    //static const std::string OPENCV_WINDOW = "Image window";
+    //cv::namedWindow(OPENCV_WINDOW);
+    //cv::imshow(OPENCV_WINDOW, image_gray_);
+    //cv::waitKey(3);
     try {
         image_depth_ = cv_bridge::toCvCopy(image_depth_msg)->image;
     } catch (cv_bridge::Exception& e) {
@@ -95,8 +72,6 @@ void SignDetection::detect_image(Mat& cvframe, string modelWeights, string model
     string str, outputFile;
     cv::Mat frame = cvframe;
     // Create a window
-    static const string kWinName = "Deep learning object detection in OpenCV";
-    namedWindow(kWinName, WINDOW_NORMAL);
 
     // Stop the program if reached end of video
     // Create a 4D blob from a frame.

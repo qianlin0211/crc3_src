@@ -36,6 +36,7 @@ private:
     ros::Publisher result_pub_;
     ros::Publisher detected_image_pub_;
     cv::Mat image_depth_;
+    cv::Mat image_gray_;
     message_filters::Subscriber<sensor_msgs::Image> image_color_sub_;
     message_filters::Subscriber<sensor_msgs::Image> image_depth_sub_;
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> MySyncPolicy;
@@ -62,6 +63,5 @@ private:
     void detect_image(Mat& cvframe, string modelWeights, string modelConfiguration, string classesFile, std_msgs::Header header);
     void postprocess(Mat& frame, const vector<Mat>& outs);
     float CaculateDepth(int c_x, int c_y, int w, int h);
-    int encoding2mat_type(const std::string& encoding);
 };
 #endif
