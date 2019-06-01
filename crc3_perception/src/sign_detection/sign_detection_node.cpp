@@ -3,8 +3,8 @@
 
 SignDetection::SignDetection(ros::NodeHandle& node_handle)
     : node_handle_(node_handle)
-    , image_color_sub_(node_handle_, "/kinect2/hd/image_color", 1)
-    , image_depth_sub_(node_handle_, "/kinect2/sd/image_depth_rect", 1)
+    , image_color_sub_(node_handle_, "/kinect2/qhd/image_color_rect", 1)
+    , image_depth_sub_(node_handle_, "/kinect2/qhd/image_depth_rect", 1)
     , sync(MySyncPolicy(10), image_color_sub_, image_depth_sub_)
 {
 
@@ -16,10 +16,10 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
 float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
 {
     int mal = 0;
-    int l_x = c_x - w / 2;
-    int r_x = c_x + w / 2;
-    int t_y = c_y - h / 2;
-    int b_y = c_y + h / 2;
+    int l_x = c_x - w / 4;
+    int r_x = c_x + w / 4;
+    int t_y = c_y - h / 4;
+    int b_y = c_y + h / 4;
     float sum_depth = 0.0;
 
     for (int i = l_x; i < r_x; ++i) {
