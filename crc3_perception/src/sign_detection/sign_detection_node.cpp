@@ -13,6 +13,9 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
     sync.registerCallback(boost::bind(&SignDetection::Callback, this, _1, _2));
 }
 
+int SignDetection::CaculateDirection(int c_x, int c_y, int w, int h)
+{
+}
 float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
 {
     int mal = 0;

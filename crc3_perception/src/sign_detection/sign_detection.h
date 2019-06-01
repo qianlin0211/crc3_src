@@ -63,5 +63,6 @@ private:
     void detect_image(Mat& cvframe, string modelWeights, string modelConfiguration, string classesFile, std_msgs::Header header);
     void postprocess(Mat& frame, const vector<Mat>& outs);
     float CaculateDepth(int c_x, int c_y, int w, int h);
+    int CaculateDirection(int c_x, int c_y, int w, int h);
 };
 #endif
