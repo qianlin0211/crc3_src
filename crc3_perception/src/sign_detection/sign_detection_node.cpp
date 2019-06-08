@@ -152,7 +152,7 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
     // lower confidences
     vector<int> indices;
     float last_dep = 1000.0;
-    int classId_target = 3;
+    int classId_target = 4;
     std_msgs::String str_msg;
     NMSBoxes(boxes, confidences, confThreshold_, nmsThreshold_, indices);
     for (size_t i = 0; i < indices.size(); ++i) {
