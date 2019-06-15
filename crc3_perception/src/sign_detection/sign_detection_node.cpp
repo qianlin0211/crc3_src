@@ -152,7 +152,7 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
     // lower confidences
     vector<int> indices;
     float last_dep = 1000.0;
-    int classId_target = 4;
+    string str_push;
     std_msgs::String str_msg;
     NMSBoxes(boxes, confidences, confThreshold_, nmsThreshold_, indices);
     for (size_t i = 0; i < indices.size(); ++i) {
@@ -160,15 +160,47 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
         Rect box = boxes[idx];
         float dep = depth_vec[idx];
         drawPred(classIds[idx], confidences[idx], box.x, box.y, box.x + box.width, box.y + box.height, frame, dep);
-        if (dep < last_dep) {
+        if (dep <= last_dep) {
+            dis = dep;
             classId_target = classIds[idx];
+            last_dep = dep;
         }
-        last_dep = dep;
     }
-    str_msg.data = classes_[classId_target];
-    result_pub_.publish(str_msg);
+    cout << dis << endl;
+    if (dis > 0.8) {
+        str_vec.push_back(classes_[classId_target]);
+    } else if (str_vec.size() != 0 && dis < 0.8) {
+        str_push = find_max(str_vec);
+        str_msg.data = str_push;
+        result_pub_.publish(str_msg);
+        str_vec.clear();
+    }
 }
 
+string SignDetection::find_max(const vector<string>& invec)
+
+{
+    if (invec.size() != 0) {
+        int last_count = 0;
+        int id;
+        for (int i = 0; i < invec.size(); i++) {
+            string temp = invec[i];
+            int count = 0;
+            for (int j = 0; j < invec.size(); j++) {
+                if (temp == invec[j]) {
+                    count++;
+                }
+            }
+            if (count > last_count) {
+                id = i;
+                last_count = count;
+            }
+        }
+        return invec.at(id);
+    } else {
+        return "NONE_test";
+    }
+}
 void SignDetection::drawPred(int classId, float conf, int left, int top, int right, int bottom, Mat& frame, float distance)
 {
 
