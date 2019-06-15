@@ -166,7 +166,6 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
             last_dep = dep;
         }
     }
-    cout << dis << endl;
     if (dis > 0.8) {
         str_vec.push_back(classes_[classId_target]);
     } else if (str_vec.size() != 0 && dis < 0.8) {
