@@ -8,7 +8,7 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
     , sync(MySyncPolicy(10), image_color_sub_, image_depth_sub_)
 {
 
-    result_pub_ = node_handle_.advertise<std_msgs::String>("/perception", 1);
+    result_pub_ = node_handle_.advertise<crc3_perception::detection>("/perception", 1);
     detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("/detected_image", 1);
     sync.registerCallback(boost::bind(&SignDetection::Callback, this, _1, _2));
 }
@@ -150,16 +150,21 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
 
     // Perform non maximum suppression to eliminate redundant overlapping boxes with
     // lower confidences
+    detect_msg.stop_found = false;
+    detect_msg.dist_to_stop = -0.0;
     vector<int> indices;
     float last_dep = 1000.0;
     string str_push;
-    std_msgs::String str_msg;
     NMSBoxes(boxes, confidences, confThreshold_, nmsThreshold_, indices);
     for (size_t i = 0; i < indices.size(); ++i) {
         int idx = indices[i];
         Rect box = boxes[idx];
         float dep = depth_vec[idx];
         drawPred(classIds[idx], confidences[idx], box.x, box.y, box.x + box.width, box.y + box.height, frame, dep);
+        if (classIds[idx] == 2) {
+            detect_msg.stop_found = true;
+            detect_msg.dist_to_stop = dep;
+        }
         if (dep <= last_dep) {
             dis = dep;
             classId_target = classIds[idx];
@@ -170,8 +175,8 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
         str_vec.push_back(classes_[classId_target]);
     } else if (str_vec.size() != 0 && dis < 0.8) {
         str_push = find_max(str_vec);
-        str_msg.data = str_push;
-        result_pub_.publish(str_msg);
+        detect_msg.sign_nearest = str_push;
+        result_pub_.publish(detect_msg);
         str_vec.clear();
     }
 }

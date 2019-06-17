@@ -2,6 +2,7 @@
 #define SCREW_DETECTION_H
 
 #include <algorithm>
+#include <crc3_perception/detection.h>
 #include <cv_bridge/cv_bridge.h>
 #include <map>
 #include <ros/package.h>
@@ -37,6 +38,7 @@ public:
     SignDetection(ros::NodeHandle& node_handle);
 
 private:
+    crc3_perception::detection detect_msg;
     float dis;
     int classId_target;
     vector<string> str_vec;
