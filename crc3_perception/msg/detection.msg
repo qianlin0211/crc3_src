@@ -1,3 +1,3 @@
-bool stop_found
+bool stop_sign_found
 float64 dist_to_stop
-string sign_nearest
+string direction

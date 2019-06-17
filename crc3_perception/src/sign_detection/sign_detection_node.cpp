@@ -11,6 +11,8 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
     result_pub_ = node_handle_.advertise<crc3_perception::detection>("/perception", 1);
     detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("/detected_image", 1);
     sync.registerCallback(boost::bind(&SignDetection::Callback, this, _1, _2));
+    f = boost::bind(&SignDetection::dynamic_callback, this, _1, _2);
+    server.setCallback(f);
 }
 
 float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
@@ -35,6 +37,11 @@ float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
         return (sum_depth / mal);
     }
     return 0.0;
+}
+
+void SignDetection::dynamic_callback(crc3_perception::DistanceConfig& config, uint32_t level)
+{
+    dynamic_dis = config.distance_param;
 }
 void SignDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sensor_msgs::Image::ConstPtr& image_depth_msg)
 {
@@ -150,7 +157,7 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
 
     // Perform non maximum suppression to eliminate redundant overlapping boxes with
     // lower confidences
-    detect_msg.stop_found = false;
+    detect_msg.stop_sign_found = false;
     detect_msg.dist_to_stop = -0.0;
     vector<int> indices;
     float last_dep = 1000.0;
@@ -162,20 +169,20 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
         float dep = depth_vec[idx];
         drawPred(classIds[idx], confidences[idx], box.x, box.y, box.x + box.width, box.y + box.height, frame, dep);
         if (classIds[idx] == 2) {
-            detect_msg.stop_found = true;
+            detect_msg.stop_sign_found = true;
             detect_msg.dist_to_stop = dep;
         }
-        if (dep <= last_dep) {
+        if (dep <= last_dep && classIds[idx] != 2) {
             dis = dep;
             classId_target = classIds[idx];
             last_dep = dep;
         }
     }
-    if (dis > 0.8) {
+    if (dis > dynamic_dis) {
         str_vec.push_back(classes_[classId_target]);
-    } else if (str_vec.size() != 0 && dis < 0.8) {
+    } else if (str_vec.size() != 0 && dis < dynamic_dis) {
         str_push = find_max(str_vec);
-        detect_msg.sign_nearest = str_push;
+        detect_msg.direction = str_push;
         result_pub_.publish(detect_msg);
         str_vec.clear();
     }
@@ -254,7 +261,7 @@ vector<String> SignDetection::getOutputsNames(const Net& net)
 }
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "kal3_traffic_sign_detection");
+    ros::init(argc, argv, "sign_detection_node");
     ros::NodeHandle nh("~");
 
     SignDetection node(nh);

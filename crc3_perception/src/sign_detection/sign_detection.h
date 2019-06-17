@@ -27,6 +27,10 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/sync_policies/approximate_time.h>
 #include <message_filters/synchronizer.h>
+
+#include <crc3_perception/DistanceConfig.h>
+#include <dynamic_reconfigure/server.h>
+
 using namespace std;
 using namespace cv;
 using namespace dnn;
@@ -39,6 +43,9 @@ public:
 
 private:
     crc3_perception::detection detect_msg;
+    dynamic_reconfigure::Server<crc3_perception::DistanceConfig> server;
+    dynamic_reconfigure::Server<crc3_perception::DistanceConfig>::CallbackType f;
+    float dynamic_dis;
     float dis;
     int classId_target;
     vector<string> str_vec;
@@ -73,5 +80,6 @@ private:
     void postprocess(Mat& frame, const vector<Mat>& outs);
     float CaculateDepth(int c_x, int c_y, int w, int h);
     string find_max(const vector<string>& invec);
+    void dynamic_callback(crc3_perception::DistanceConfig& config, uint32_t level);
 };
 #endif
