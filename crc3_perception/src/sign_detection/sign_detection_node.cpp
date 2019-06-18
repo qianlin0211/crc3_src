@@ -159,18 +159,22 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
     // lower confidences
     detect_msg.stop_sign_found = false;
     detect_msg.dist_to_stop = -0.0;
+    classId_target = 4;
     vector<int> indices;
     float last_dep = 1000.0;
+    float last_dep_stop = 1000.0;
     string str_push;
     NMSBoxes(boxes, confidences, confThreshold_, nmsThreshold_, indices);
     for (size_t i = 0; i < indices.size(); ++i) {
         int idx = indices[i];
         Rect box = boxes[idx];
         float dep = depth_vec[idx];
+        float dep_stop = depth_vec[idx];
         drawPred(classIds[idx], confidences[idx], box.x, box.y, box.x + box.width, box.y + box.height, frame, dep);
-        if (classIds[idx] == 2) {
+        if (dep_stop <= last_dep_stop && classIds[idx] == 2) {
             detect_msg.stop_sign_found = true;
-            detect_msg.dist_to_stop = dep;
+            detect_msg.dist_to_stop = dep_stop;
+            last_dep_stop = dep_stop;
         }
         if (dep <= last_dep && classIds[idx] != 2) {
             dis = dep;
@@ -178,14 +182,9 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
             last_dep = dep;
         }
     }
-    if (dis > dynamic_dis) {
-        str_vec.push_back(classes_[classId_target]);
-    } else if (str_vec.size() != 0 && dis < dynamic_dis) {
-        str_push = find_max(str_vec);
-        detect_msg.direction = str_push;
-        result_pub_.publish(detect_msg);
-        str_vec.clear();
-    }
+    str_push = classes_[classId_target];
+    detect_msg.direction = str_push;
+    result_pub_.publish(detect_msg);
 }
 
 string SignDetection::find_max(const vector<string>& invec)
