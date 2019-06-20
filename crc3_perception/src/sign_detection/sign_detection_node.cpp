@@ -3,16 +3,14 @@
 
 SignDetection::SignDetection(ros::NodeHandle& node_handle)
     : node_handle_(node_handle)
-    , image_color_sub_(node_handle_, "/kinect2/hd/image_color_rect", 1)
-    , image_depth_sub_(node_handle_, "/kinect2/hd/image_depth_rect", 1)
+    , image_color_sub_(node_handle_, "/kinect2/qhd/image_color_rect", 1)
+    , image_depth_sub_(node_handle_, "/kinect2/qhd/image_depth_rect", 1)
     , sync(MySyncPolicy(10), image_color_sub_, image_depth_sub_)
 {
 
     result_pub_ = node_handle_.advertise<crc3_perception::detection>("/perception", 1);
     detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("/detected_image", 1);
     sync.registerCallback(boost::bind(&SignDetection::Callback, this, _1, _2));
-    f = boost::bind(&SignDetection::dynamic_callback, this, _1, _2);
-    server.setCallback(f);
 }
 
 float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
@@ -39,10 +37,6 @@ float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
     return 0.0;
 }
 
-void SignDetection::dynamic_callback(crc3_perception::DistanceConfig& config, uint32_t level)
-{
-    dynamic_dis = config.distance_param;
-}
 void SignDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sensor_msgs::Image::ConstPtr& image_depth_msg)
 {
     cv::Mat cvframe = cv_bridge::toCvCopy(msg)->image;
@@ -187,30 +181,6 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
     result_pub_.publish(detect_msg);
 }
 
-string SignDetection::find_max(const vector<string>& invec)
-
-{
-    if (invec.size() != 0) {
-        int last_count = 0;
-        int id;
-        for (int i = 0; i < invec.size(); i++) {
-            string temp = invec[i];
-            int count = 0;
-            for (int j = 0; j < invec.size(); j++) {
-                if (temp == invec[j]) {
-                    count++;
-                }
-            }
-            if (count > last_count) {
-                id = i;
-                last_count = count;
-            }
-        }
-        return invec.at(id);
-    } else {
-        return "NONE_test";
-    }
-}
 void SignDetection::drawPred(int classId, float conf, int left, int top, int right, int bottom, Mat& frame, float distance)
 {
 
