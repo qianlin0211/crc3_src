@@ -3,8 +3,8 @@
 
 SignDetection::SignDetection(ros::NodeHandle& node_handle)
     : node_handle_(node_handle)
-    , image_color_sub_(node_handle_, "/kinect2/qhd/image_color_rect", 1)
-    , image_depth_sub_(node_handle_, "/kinect2/qhd/image_depth_rect", 1)
+    , image_color_sub_(node_handle_, "/kinect2/hd/image_color_rect", 1)
+    , image_depth_sub_(node_handle_, "/kinect2/hd/image_depth_rect", 1)
     , sync(MySyncPolicy(10), image_color_sub_, image_depth_sub_)
 {
 
