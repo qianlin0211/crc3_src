@@ -67,8 +67,8 @@ private:
     ros::Publisher detected_image_pub_;
     cv::Mat image_depth_;
     message_filters::Subscriber<sensor_msgs::Image> image_color_sub_;
-    message_filters::Subscriber<sensor_msgs::CameraInfo> cameraInfo_sub_;
     message_filters::Subscriber<sensor_msgs::Image> image_depth_sub_;
+    ros::Subscriber info_sub_;
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> MySyncPolicy;
     message_filters::Synchronizer<MySyncPolicy> sync;
     // const string pro_dir_ = "/home/wu/kal_ws/anicar3_kal3/src/crc3_src/crc3_perception/src/sign_detection";
@@ -87,7 +87,7 @@ private:
     const int inpHeight_ = 416;       // Height of network's input image
     vector<string> classes_;
 
-    void Callback(const sensor_msgs::Image::ConstPtr& image_color_msg, const sensor_msgs::Image::ConstPtr& image_depth_msg, const sensor_msgs::CameraInfo::ConstPtr& camera_info_msg);
+    void Callback(const sensor_msgs::Image::ConstPtr& image_color_msg, const sensor_msgs::Image::ConstPtr& image_depth_msg);
     void drawPred(int classId, float conf, int left, int top, int right, int bottom, Mat& frame, float distance);
     vector<String> getOutputsNames(const Net& net);
     void detect_image(Mat& cvframe, string modelWeights, string modelConfiguration, string classesFile, std_msgs::Header header);
@@ -95,5 +95,6 @@ private:
     float CaculateDepth(int c_x, int c_y, int w, int h);
     string find_max(const vector<string>& invec);
     void dynamic_callback(crc3_perception::DistanceConfig& config, uint32_t level);
+    void infoCb(const sensor_msgs::CameraInfo::ConstPtr& msg);
 };
 #endif

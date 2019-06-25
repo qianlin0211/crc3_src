@@ -5,8 +5,7 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
     : node_handle_(node_handle)
     , image_color_sub_(node_handle_, "/kinect2/qhd/image_color_rect", 1)
     , image_depth_sub_(node_handle_, "/kinect2/qhd/image_depth_rect", 1)
-    , cameraInfo_sub_(node_handle_, "/kinect2/qhd/image_depth_rect/camera_info", 1)
-    , sync(MySyncPolicy(10), image_color_sub_, image_depth_sub_, cameraInfo_sub_)
+    , sync(MySyncPolicy(10), image_color_sub_, image_depth_sub_)
 {
 
     result_pub_ = node_handle_.advertise<std_msgs::String>("/go_stop", 1);
@@ -14,6 +13,12 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
     sync.registerCallback(boost::bind(&SignDetection::Callback, this, _1, _2));
     f = boost::bind(&SignDetection::dynamic_callback, this, _1, _2);
     server.setCallback(f);
+    info_sud_ = node_handle_.subscribe("/kinect2/qhd/camera_info", 1, &SignDetection::infoCb, this);
+}
+void SignDetection::infoCb(const sensor_msgs::CameraInfo::ConstPtr& msg)
+{
+
+    depth_camera_model_.fromCameraInfo(msg);
 }
 
 float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
@@ -44,14 +49,13 @@ void SignDetection::dynamic_callback(crc3_perception::DistanceConfig& config, ui
 {
     dynamic_dis = config.distance_param;
 }
-void SignDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sensor_msgs::Image::ConstPtr& image_depth_msg, const sensor_msgs::CameraInfo::ConstPtr& camera_info_msg)
+void SignDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sensor_msgs::Image::ConstPtr& image_depth_msg)
 {
     cv::Mat cvframe = cv_bridge::toCvCopy(msg)->image;
     //static const std::string OPENCV_WINDOW = "Image window";
     //cv::namedWindow(OPENCV_WINDOW);
     //cv::imshow(OPENCV_WINDOW, image_gray_);
     //cv::waitKey(3);
-    depth_camera_model_.fromCameraInfo(camera_info_msg);
     try {
         image_depth_ = cv_bridge::toCvCopy(image_depth_msg)->image;
     } catch (cv_bridge::Exception& e) {
