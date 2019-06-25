@@ -24,6 +24,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_filters
   message_generation
   dynamic_reconfigure
+  tf
+  image_geometry
 )
 
 ## System dependencies are found with CMake's conventions
