@@ -55,7 +55,6 @@ private:
     int cx = 0;
     int cy = 0;
     image_geometry::PinholeCameraModel depth_camera_model_;
-    tf::StampedTransform br_transform_;
     tf::StampedTransform lt_transform_;
     tf::TransformBroadcaster br_;
     tf::TransformListener lt_;

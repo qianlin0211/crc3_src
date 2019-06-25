@@ -180,10 +180,12 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
         cv::Point2d pt_cv(cy, cx);
         cv::Point3d xyz = depth_camera_model_.projectPixelTo3dRay(pt_cv);
         xyz *= (dis / xyz.z);
+        tf::Transform transform;
+        transform.setOrigin(tf::Vector3(xyz.x, xyz.y, xyz.z));
         tf::Quaternion q;
         q.setRPY(0, 0, 0);
-        br_transform_(tf::Transform(q, tf::Vector3(xyz.x, xyz.y, xyz.z)), ros::Time::now(), depth_camera_model_.tfFrame().c_str(), "/passenger_frame");
-        br_.sendTransform(br_transform_);
+        transform.setRotation(q);
+        br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), depth_camera_model_.tfFrame().c_str(), "/passenger_frame"));
         lt_.lookupTransform("/zebra", "/passenger_frame", ros::Time(0), lt_transform_);
         pass_x = lt_transform_.getOrigin().x();
         pass_y = lt_transform_.getOrigin().y();
