@@ -13,7 +13,7 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
     sync.registerCallback(boost::bind(&SignDetection::Callback, this, _1, _2));
     f = boost::bind(&SignDetection::dynamic_callback, this, _1, _2);
     server.setCallback(f);
-    info_sud_ = node_handle_.subscribe("/kinect2/qhd/camera_info", 1, &SignDetection::infoCb, this);
+    info_sub_ = node_handle_.subscribe("/kinect2/qhd/camera_info", 1, &SignDetection::infoCb, this);
 }
 void SignDetection::infoCb(const sensor_msgs::CameraInfo::ConstPtr& msg)
 {
