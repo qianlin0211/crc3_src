@@ -5,10 +5,11 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
     : node_handle_(node_handle)
     , image_color_sub_(node_handle_, "/kinect2/qhd/image_color_rect", 1)
     , image_depth_sub_(node_handle_, "/kinect2/qhd/image_depth_rect", 1)
-    , sync(MySyncPolicy(10), image_color_sub_, image_depth_sub_)
+    , cameraInfo_sub_(node_handle_, "/kinect2/qhd/image_depth_rect/camera_info", 1)
+    , sync(MySyncPolicy(10), image_color_sub_, image_depth_sub_, cameraInfo_sud_)
 {
 
-    result_pub_ = node_handle_.advertise<crc3_perception::detection>("/perception", 1);
+    result_pub_ = node_handle_.advertise<std_msgs::String>("/go_stop", 1);
     detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("/detected_image", 1);
     sync.registerCallback(boost::bind(&SignDetection::Callback, this, _1, _2));
     f = boost::bind(&SignDetection::dynamic_callback, this, _1, _2);
@@ -18,10 +19,10 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
 float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
 {
     int mal = 0;
-    int l_x = c_x - w / 4;
-    int r_x = c_x + w / 4;
-    int t_y = c_y - h / 4;
-    int b_y = c_y + h / 4;
+    int l_x = c_x - w / 2;
+    int r_x = c_x + w / 2;
+    int t_y = c_y - h / 2;
+    int b_y = c_y + h / 2;
     float sum_depth = 0.0;
 
     for (int i = l_x; i < r_x; ++i) {
@@ -43,13 +44,14 @@ void SignDetection::dynamic_callback(crc3_perception::DistanceConfig& config, ui
 {
     dynamic_dis = config.distance_param;
 }
-void SignDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sensor_msgs::Image::ConstPtr& image_depth_msg)
+void SignDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sensor_msgs::Image::ConstPtr& image_depth_msg, sensor_msgs::CameraInfo::ConstPtr& camera_info_msg)
 {
     cv::Mat cvframe = cv_bridge::toCvCopy(msg)->image;
     //static const std::string OPENCV_WINDOW = "Image window";
     //cv::namedWindow(OPENCV_WINDOW);
     //cv::imshow(OPENCV_WINDOW, image_gray_);
     //cv::waitKey(3);
+    depth_camera_model.fromCameraInfo(camera_info_msg);
     try {
         image_depth_ = cv_bridge::toCvCopy(image_depth_msg)->image;
     } catch (cv_bridge::Exception& e) {
@@ -145,7 +147,7 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
                 int left = centerX - width / 2;
                 int top = centerY - height / 2;
                 float depth = CaculateDepth(centerX, centerY, width, height);
-                if (depth <= 3.0) {
+                if (depth <= 5.0) {
                     classIds.push_back(classIdPoint.x);
                     confidences.push_back((float)confidence);
                     boxes.push_back(Rect(left, top, width, height));
@@ -157,35 +159,29 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
 
     // Perform non maximum suppression to eliminate redundant overlapping boxes with
     // lower confidences
-    detect_msg.stop_sign_found = false;
-    detect_msg.dist_to_stop = -0.0;
     vector<int> indices;
     float last_dep = 1000.0;
-    string str_push;
     NMSBoxes(boxes, confidences, confThreshold_, nmsThreshold_, indices);
     for (size_t i = 0; i < indices.size(); ++i) {
         int idx = indices[i];
         Rect box = boxes[idx];
         float dep = depth_vec[idx];
         drawPred(classIds[idx], confidences[idx], box.x, box.y, box.x + box.width, box.y + box.height, frame, dep);
-        if (classIds[idx] == 2) {
-            detect_msg.stop_sign_found = true;
-            detect_msg.dist_to_stop = dep;
-        }
-        if (dep <= last_dep && classIds[idx] != 2) {
+        if (dep <= last_dep) {
             dis = dep;
+            cx = box.x + box.width / 2;
+            cy = box.y + box.height / 2;
+
             classId_target = classIds[idx];
             last_dep = dep;
         }
     }
-    if (dis > dynamic_dis) {
-        str_vec.push_back(classes_[classId_target]);
-    } else if (str_vec.size() != 0 && dis < dynamic_dis) {
-        str_push = find_max(str_vec);
-        detect_msg.direction = str_push;
-        result_pub_.publish(detect_msg);
-        str_vec.clear();
-    }
+    dis;
+    cx;
+    cy;
+    //debug erro maybe hier
+    cv::Point2d pt_cv(cx, cy);
+    cv::Point3d direction = depth_camera_model.projetcPixelTo3dRay(pt_cv);
 }
 
 string SignDetection::find_max(const vector<string>& invec)

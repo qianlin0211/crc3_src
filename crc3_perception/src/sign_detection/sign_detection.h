@@ -7,6 +7,7 @@
 #include <map>
 #include <ros/package.h>
 #include <ros/ros.h>
+#include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 #include <std_msgs/Header.h>
@@ -31,6 +32,10 @@
 #include <crc3_perception/DistanceConfig.h>
 #include <dynamic_reconfigure/server.h>
 
+#include <image_geometry/pinhole_camera_model.h>
+#include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
+
 using namespace std;
 using namespace cv;
 using namespace dnn;
@@ -42,18 +47,21 @@ public:
     SignDetection(ros::NodeHandle& node_handle);
 
 private:
-    crc3_perception::detection detect_msg;
+    std_msgs::String str_msg;
     dynamic_reconfigure::Server<crc3_perception::DistanceConfig> server;
     dynamic_reconfigure::Server<crc3_perception::DistanceConfig>::CallbackType f;
     float dynamic_dis;
     float dis;
-    int classId_target;
+    int cx;
+    int cy;
+    image_geometry::PinholeCameraModel depth_camera_model;
     vector<string> str_vec;
     ros::NodeHandle node_handle_;
     ros::Publisher result_pub_;
     ros::Publisher detected_image_pub_;
     cv::Mat image_depth_;
     message_filters::Subscriber<sensor_msgs::Image> image_color_sub_;
+    message_filters::Subscriber<sensor_msgs::CameraInfo> cameraInfo_sub_;
     message_filters::Subscriber<sensor_msgs::Image> image_depth_sub_;
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> MySyncPolicy;
     message_filters::Synchronizer<MySyncPolicy> sync;
@@ -63,9 +71,9 @@ private:
     // const String modelWeights_ = pro_dir_ + "/data_file/yolov3.weights";
     const string pro_dir_
         = ros::package::getPath("crc3_perception");
-    const String modelConfiguration_ = pro_dir_ + "/src/sign_detection/data_file/sign_tiny.cfg";
-    const string classesFile_ = pro_dir_ + "/src/sign_detection/data_file/sign.names";
-    const String modelWeights_ = pro_dir_ + "/src/sign_detection/data_file/sign_tiny_final.weights";
+    const String modelConfiguration_ = pro_dir_ + "/src/sign_detection/data_file/passenger_tiny.cfg";
+    const string classesFile_ = pro_dir_ + "/src/sign_detection/data_file/passenger.names";
+    const String modelWeights_ = pro_dir_ + "/src/sign_detection/data_file/passenger_tiny_final.weights";
 
     const float confThreshold_ = 0.5; // Confidence threshold
     const float nmsThreshold_ = 0.4;  // Non-maximum suppression threshold
