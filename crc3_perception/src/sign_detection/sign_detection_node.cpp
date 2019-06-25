@@ -6,7 +6,7 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
     , image_color_sub_(node_handle_, "/kinect2/qhd/image_color_rect", 1)
     , image_depth_sub_(node_handle_, "/kinect2/qhd/image_depth_rect", 1)
     , cameraInfo_sub_(node_handle_, "/kinect2/qhd/image_depth_rect/camera_info", 1)
-    , sync(MySyncPolicy(10), image_color_sub_, image_depth_sub_, cameraInfo_sud_)
+    , sync(MySyncPolicy(10), image_color_sub_, image_depth_sub_, cameraInfo_sub_)
 {
 
     result_pub_ = node_handle_.advertise<std_msgs::String>("/go_stop", 1);
@@ -44,14 +44,14 @@ void SignDetection::dynamic_callback(crc3_perception::DistanceConfig& config, ui
 {
     dynamic_dis = config.distance_param;
 }
-void SignDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sensor_msgs::Image::ConstPtr& image_depth_msg, sensor_msgs::CameraInfo::ConstPtr& camera_info_msg)
+void SignDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sensor_msgs::Image::ConstPtr& image_depth_msg, const sensor_msgs::CameraInfo::ConstPtr& camera_info_msg)
 {
     cv::Mat cvframe = cv_bridge::toCvCopy(msg)->image;
     //static const std::string OPENCV_WINDOW = "Image window";
     //cv::namedWindow(OPENCV_WINDOW);
     //cv::imshow(OPENCV_WINDOW, image_gray_);
     //cv::waitKey(3);
-    depth_camera_model.fromCameraInfo(camera_info_msg);
+    depth_camera_model_.fromCameraInfo(camera_info_msg);
     try {
         image_depth_ = cv_bridge::toCvCopy(image_depth_msg)->image;
     } catch (cv_bridge::Exception& e) {
@@ -172,16 +172,35 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
             cx = box.x + box.width / 2;
             cy = box.y + box.height / 2;
 
-            classId_target = classIds[idx];
             last_dep = dep;
         }
     }
-    dis;
-    cx;
-    cy;
-    //debug erro maybe hier
-    cv::Point2d pt_cv(cx, cy);
-    cv::Point3d direction = depth_camera_model.projetcPixelTo3dRay(pt_cv);
+    //debug error maybe hier
+    if (dis != 0.0) {
+        cv::Point2d pt_cv(cy, cx);
+        cv::Point3d xyz = depth_camera_model_.projectPixelTo3dRay(pt_cv);
+        xyz *= (dis / xyz.z);
+        tf::Quaternion q;
+        q.setRPY(0, 0, 0);
+        br_transform_(tf::Transform(q, tf::Vector3(xyz.x, xyz.y, xyz.z)), ros::Time::now(), depth_camera_model_.tfFrame().c_str(), "/passenger_frame");
+        br_.sendTransform(br_transform_);
+        lt_.lookupTransform("/zebra", "/passenger_frame", ros::Time(0), lt_transform_);
+        pass_x = lt_transform_.getOrigin().x();
+        pass_y = lt_transform_.getOrigin().y();
+        if (last_y == 0.0) {
+            last_y = pass_y;
+        }
+        float move = pass_y - last_y;
+        last_y = pass_y;
+        if (move > dynamic_dis && pass_y > 0 && pass_y < 0.5 && dis < 1.5) {
+            str_msg.data = "stop";
+        } else {
+            str_msg.data = "go";
+        }
+    } else {
+        str_msg.data = "go";
+    }
+    result_pub_.publish(str_msg);
 }
 
 string SignDetection::find_max(const vector<string>& invec)

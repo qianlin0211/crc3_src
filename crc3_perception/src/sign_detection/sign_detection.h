@@ -51,10 +51,17 @@ private:
     dynamic_reconfigure::Server<crc3_perception::DistanceConfig> server;
     dynamic_reconfigure::Server<crc3_perception::DistanceConfig>::CallbackType f;
     float dynamic_dis;
-    float dis;
-    int cx;
-    int cy;
-    image_geometry::PinholeCameraModel depth_camera_model;
+    float dis = 0.0;
+    int cx = 0;
+    int cy = 0;
+    image_geometry::PinholeCameraModel depth_camera_model_;
+    tf::StampedTransform br_transform_;
+    tf::StampedTransform lt_transform_;
+    tf::TransformBroadcaster br_;
+    tf::TransformListener lt_;
+    float pass_x;
+    float pass_y;
+    float last_y = 0.0;
     vector<string> str_vec;
     ros::NodeHandle node_handle_;
     ros::Publisher result_pub_;
@@ -81,7 +88,7 @@ private:
     const int inpHeight_ = 416;       // Height of network's input image
     vector<string> classes_;
 
-    void Callback(const sensor_msgs::Image::ConstPtr& image_color_msg, const sensor_msgs::Image::ConstPtr& image_depth_msg);
+    void Callback(const sensor_msgs::Image::ConstPtr& image_color_msg, const sensor_msgs::Image::ConstPtr& image_depth_msg, const sensor_msgs::CameraInfo::ConstPtr& camera_info_msg);
     void drawPred(int classId, float conf, int left, int top, int right, int bottom, Mat& frame, float distance);
     vector<String> getOutputsNames(const Net& net);
     void detect_image(Mat& cvframe, string modelWeights, string modelConfiguration, string classesFile, std_msgs::Header header);
