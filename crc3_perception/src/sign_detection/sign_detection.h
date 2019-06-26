@@ -49,6 +49,7 @@ private:
     ros::Publisher detected_image_pub_;
     cv::Mat image_depth_;
     cv::Mat image_color_;
+    cv::Mat image_roi_;
     message_filters::Subscriber<sensor_msgs::Image> image_color_sub_;
     message_filters::Subscriber<sensor_msgs::Image> image_depth_sub_;
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> MySyncPolicy;
@@ -79,5 +80,6 @@ private:
     int CaculateDirectionNeu(int c_x, int c_y, int w, int h);
     float getAngelOfTwoVector(Point2f& pt1, Point2f& pt2, Point2f& c);
     void dynamic_callback(crc3_perception::DistanceConfig& config, uint32_t level);
+    int CaculateDirectionCircle(int c_x, int c_y, int w, int h);
 };
 #endif

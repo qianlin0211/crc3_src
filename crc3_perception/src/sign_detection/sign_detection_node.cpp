@@ -155,6 +155,38 @@ int SignDetection::CaculateDirectionNeu(int c_x, int c_y, int w, int h)
         std::cout << "mal =0" << std::endl;
     }
 }
+int SignDetection::CaculateDirectionCircle(int c_x, int c_y, int w, int h)
+{
+    int l_x = c_x - w / 2;
+    int t_y = c_y - h / 2;
+    float last_rad = -0.0;
+    int cir_x = 0;
+    int cir_y = 0;
+    cv::Rect rect(l_x, t_y, w, h);
+    cv::Mat change_src, cannyImg;
+    cv::Mat image_roi = image_roi_(rect);
+    cv::medianBlur(image_roi, change_src, 3);
+    image_roi.release();
+    cv::cvtColor(change_src, change_src, CV_BGR2GRAY);
+    cv::Canny(change_src, cannyImg, 100, 350);
+    change_src.release();
+    vector<Vec3f> pcircles;
+    HoughCircles(cannyImg, pcircles, CV_HOUGH_GRADIENT, 1, 20, 180, 20, 0, 0);
+    for (int i = 0; i < pcircles.size(); i++) {
+        Vec3f cc = pcircles[i];
+        if (cc[2] > last_rad) {
+            cir_x = cc[0];
+            cir_y = cc[1];
+            last_rad = cc[2];
+        }
+    }
+    if (last_rad > 0) {
+        return CaculateDirectionNeu(cir_x, cir_y, 2 * last_rad, 2 * last_rad);
+    } else {
+        cout << "circle no found......." << endl;
+        return 4;
+    }
+}
 float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
 {
     int mal = 0;
@@ -182,6 +214,7 @@ void SignDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sens
 {
     cv::Mat cvframe = cv_bridge::toCvCopy(msg)->image;
     image_color_ = cvframe.clone();
+    image_roi_ = cvframe.clone();
     //static const std::string OPENCV_WINDOW = "Image window";
     //cv::namedWindow(OPENCV_WINDOW);
     //cv::imshow(OPENCV_WINDOW, image_gray_);
@@ -284,7 +317,7 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
                 if (depth <= 3.0) {
                     if (classIdPoint.x == 0) {
                         //add direction caculate finktion
-                        int directId = CaculateDirectionNeu(centerX, centerY, width, height);
+                        int directId = CaculateDirectionCircle(centerX, centerY, width, height);
 
                         classIds.push_back(directId);
                         confidences.push_back((float)confidence);
