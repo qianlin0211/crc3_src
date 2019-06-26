@@ -136,16 +136,16 @@ int SignDetection::CaculateDirectionNeu(int c_x, int c_y, int w, int h)
             float right_left = 2 * (right - left);
             float top_bottom = 2 * (top - bottom);
             if (right_left > dynamic_dis) {
-                return 3;
+                return 1;
             } else if (right_left < -dynamic_dis) {
                 return 0;
             } else {
                 if (top_bottom > dynamic_dis) {
-                    return 2;
+                    return 3;
                 } else if (top_bottom < -dynamic_dis) {
                     return 4;
                 } else
-                    return 2;
+                    return 3;
             }
         } else {
 
@@ -283,7 +283,7 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
                 int top = centerY - height / 2;
                 float depth = CaculateDepth(centerX, centerY, width, height);
                 if (depth <= 3.0) {
-                    if (classIdPoint.x == 0) {
+                    if (classIdPoint.x == 0 || classIdPoint.x == 1) {
                         //add direction caculate finktion
                         int directId = CaculateDirectionNeu(centerX, centerY, width, height);
 
