@@ -8,11 +8,17 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
     , sync(MySyncPolicy(10), image_color_sub_, image_depth_sub_)
 {
 
-    result_pub_ = node_handle_.advertise<std_msgs::String>("/command", 1);
+    result_pub_ = node_handle_.advertise<crc3_perception::detection>("/perception", 1);
     detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("/detected_image", 1);
     sync.registerCallback(boost::bind(&SignDetection::Callback, this, _1, _2));
+    f = boost::bind(&SignDetection::dynamic_callback, this, _1, _2);
+    server.setCallback(f);
 }
 
+void SignDetection::dynamic_callback(crc3_perception::DistanceConfig& config, uint32_t level)
+{
+    dynamic_dis = config.distance_param;
+}
 float SignDetection::getAngelOfTwoVector(Point2f& pt1, Point2f& pt2, Point2f& c)
 {
     float theta = atan2(pt1.x - c.x, pt1.y - c.y) - atan2(pt2.x - c.x, pt2.y - c.y);
@@ -67,13 +73,95 @@ int SignDetection::CaculateDirection(int c_x, int c_y, int w, int h)
     //std::cout << white_x - c_x << std::endl;
     //std::cout << white_y - c_y << std::endl;
 }
+int SignDetection::CaculateDirectionNeu(int c_x, int c_y, int w, int h)
+{
+    int sum_x = 0;
+    int sum_y = 0;
+    int mal = 0;
+    int sum_right = 0;
+    int sum_left = 0;
+    int sum_top = 0;
+    int sum_bottom = 0;
+    int mal_right = 0;
+    int mal_left = 0;
+    int mal_top = 0;
+    int mal_bottom = 0;
+    int l_x = c_x - w / 2;
+    int r_x = c_x + w / 2;
+    int t_y = c_y - h / 2;
+    int b_y = c_y + h / 2;
+    for (int u = l_x; u < r_x; ++u) {
+        for (int v = t_y; v < b_y; ++v) {
+            float depth = image_depth_.at<short int>(cv::Point(u, v)) / 1000.0;
+            if (depth > 0) {
+                sum_x += u;
+                sum_y += v;
+                mal++;
+            }
+        }
+    }
+    if (mal > 0) {
+        int x = (int)sum_x / mal;
+        int y = (int)sum_y / mal;
+
+        for (int i = l_x; i < r_x; ++i) {
+            for (int j = t_y; j < b_y; ++j) {
+                float depthN = image_depth_.at<short int>(cv::Point(i, j)) / 1000.0;
+                if (depthN > 0) {
+                    cv::Vec3b value = image_color_.at<cv::Vec3b>(cv::Point(i, j));
+                    if (i > x) {
+                        sum_right += (value[0] + value[1] + value[2]);
+                        mal_right += 1;
+                    }
+                    if (i < x) {
+                        sum_left += (value[0] + value[1] + value[2]);
+                        mal_left += 1;
+                    }
+                    if (j < y) {
+                        sum_top += (value[0] + value[1] + value[2]);
+                        mal_top += 1;
+                    }
+                    if (j > y) {
+                        sum_bottom += (value[0] + value[1] + value[2]);
+                        mal_bottom += 1;
+                    }
+                }
+            }
+        }
+        if (mal_right > 0 && mal_left > 0 && mal_top > 0 && mal_bottom > 0) {
+            float right = sum_right / mal_right;
+            float left = sum_left / mal_left;
+            float top = sum_top / mal_top;
+            float bottom = sum_bottom / mal_bottom;
+            float right_left = 2 * (right - left);
+            float top_bottom = 2 * (top - bottom);
+            if (right_left > dynamic_dis) {
+                return 3;
+            } else if (right_left < -dynamic_dis) {
+                return 0;
+            } else {
+                if (top_bottom > dynamic_dis) {
+                    return 2;
+                } else {
+                    return 4;
+                }
+            }
+        } else {
+
+            std::cout << "mal_right =0" << std::endl;
+        }
+
+    } else {
+        std::cout << "mal =0" << std::endl;
+    }
+}
 float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
 {
     int mal = 0;
-    int l_x = c_x - w / 4;
-    int r_x = c_x + w / 4;
-    int t_y = c_y - h / 4;
-    int b_y = c_y + h / 4;
+    int l_x = c_x - w / 2;
+    int r_x = c_x + w / 2;
+    int t_y = c_y - h / 2;
+    int b_y = c_y + h / 2;
     float sum_depth = 0.0;
 
     for (int i = l_x; i < r_x; ++i) {
@@ -93,7 +181,7 @@ float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
 void SignDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sensor_msgs::Image::ConstPtr& image_depth_msg)
 {
     cv::Mat cvframe = cv_bridge::toCvCopy(msg)->image;
-    image_color_ = cvframe;
+    image_color_ = cvframe.clone();
     //static const std::string OPENCV_WINDOW = "Image window";
     //cv::namedWindow(OPENCV_WINDOW);
     //cv::imshow(OPENCV_WINDOW, image_gray_);
@@ -193,10 +281,10 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
                 int left = centerX - width / 2;
                 int top = centerY - height / 2;
                 float depth = CaculateDepth(centerX, centerY, width, height);
-                if (depth <= 10000.0) {
+                if (depth <= 3.0) {
                     if (classIdPoint.x == 0) {
                         //add direction caculate finktion
-                        int directId = CaculateDirection(centerX, centerY, width, height);
+                        int directId = CaculateDirectionNeu(centerX, centerY, width, height);
 
                         classIds.push_back(directId);
                         confidences.push_back((float)confidence);
@@ -214,23 +302,33 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
 
     // Perform non maximum suppression to eliminate redundant overlapping boxes with
     // lower confidences
+    detect_msg.stop_sign_found = false;
+    detect_msg.dist_to_stop = -0.0;
     vector<int> indices;
     float last_dep = 1000.0;
-    int classId_target = 3;
-    std_msgs::String str_msg;
+    float last_dep_stop = 1000.0;
+    string str_push;
+    classId_target = 4;
     NMSBoxes(boxes, confidences, confThreshold_, nmsThreshold_, indices);
     for (size_t i = 0; i < indices.size(); ++i) {
         int idx = indices[i];
         Rect box = boxes[idx];
         float dep = depth_vec[idx];
+        float dep_stop = depth_vec[idx];
         drawPred(classIds[idx], confidences[idx], box.x, box.y, box.x + box.width, box.y + box.height, frame, dep);
-        if (dep < last_dep) {
-            classId_target = classIds[idx];
+        if (dep_stop <= last_dep_stop && classIds[idx] == 1 && dep_stop > 0.0) {
+            detect_msg.stop_sign_found = true;
+            detect_msg.dist_to_stop = dep_stop;
+            last_dep_stop = dep_stop;
         }
-        last_dep = dep;
+        if (dep <= last_dep && classIds[idx] != 1) {
+            classId_target = classIds[idx];
+            last_dep = dep;
+        }
     }
-    str_msg.data = classes_[classId_target];
-    result_pub_.publish(str_msg);
+    str_push = classes_[classId_target];
+    detect_msg.direction = str_push;
+    result_pub_.publish(detect_msg);
 }
 
 void SignDetection::drawPred(int classId, float conf, int left, int top, int right, int bottom, Mat& frame, float distance)
