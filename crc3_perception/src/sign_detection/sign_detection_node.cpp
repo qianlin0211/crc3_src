@@ -142,9 +142,10 @@ int SignDetection::CaculateDirectionNeu(int c_x, int c_y, int w, int h)
             } else {
                 if (top_bottom > dynamic_dis) {
                     return 2;
-                } else {
+                } else if (top_bottom < -dynamic_dis) {
                     return 4;
-                }
+                } else
+                    return 2;
             }
         } else {
 
