@@ -319,12 +319,12 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
         float dep = depth_vec[idx];
         float dep_stop = depth_vec[idx];
         drawPred(classIds[idx], confidences[idx], box.x, box.y, box.x + box.width, box.y + box.height, frame, dep);
-        if (dep_stop <= last_dep_stop && classIds[idx] == 1 && dep_stop > 0.0) {
+        if (dep_stop <= last_dep_stop && classIds[idx] == 2 && dep_stop > 0.0) {
             detect_msg.stop_sign_found = true;
             detect_msg.dist_to_stop = dep_stop;
             last_dep_stop = dep_stop;
         }
-        if (dep <= last_dep && classIds[idx] != 1) {
+        if (dep <= last_dep && classIds[idx] != 2) {
             classId_target = classIds[idx];
             last_dep = dep;
         }
