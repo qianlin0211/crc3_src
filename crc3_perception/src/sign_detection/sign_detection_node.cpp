@@ -150,10 +150,12 @@ int SignDetection::CaculateDirectionNeu(int c_x, int c_y, int w, int h)
         } else {
 
             std::cout << "mal_right =0" << std::endl;
+            return 4;
         }
 
     } else {
         std::cout << "mal =0" << std::endl;
+        return 4;
     }
 }
 float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
