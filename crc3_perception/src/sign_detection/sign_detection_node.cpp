@@ -18,6 +18,8 @@ SignDetection::SignDetection(ros::NodeHandle& node_handle)
 void SignDetection::dynamic_callback(crc3_perception::DistanceConfig& config, uint32_t level)
 {
     dynamic_dis = config.distance_param;
+    dynamic_depth = config.depth_param;
+    dynamic_box = config.box_param;
 }
 float SignDetection::getAngelOfTwoVector(Point2f& pt1, Point2f& pt2, Point2f& c)
 {
@@ -73,7 +75,7 @@ int SignDetection::CaculateDirection(int c_x, int c_y, int w, int h)
     //std::cout << white_x - c_x << std::endl;
     //std::cout << white_y - c_y << std::endl;
 }
-int SignDetection::CaculateDirectionNeu(int c_x, int c_y, int w, int h)
+int SignDetection::CaculateDirectionNeu(int c_x, int c_y, int w, int h, float d)
 {
     int sum_x = 0;
     int sum_y = 0;
@@ -86,14 +88,14 @@ int SignDetection::CaculateDirectionNeu(int c_x, int c_y, int w, int h)
     int mal_left = 0;
     int mal_top = 0;
     int mal_bottom = 0;
-    int l_x = c_x - w / 2;
-    int r_x = c_x + w / 2;
-    int t_y = c_y - h / 2;
-    int b_y = c_y + h / 2;
+    int l_x = c_x - w / dynamic_box;
+    int r_x = c_x + w / dynamic_box;
+    int t_y = c_y - h / dynamic_box;
+    int b_y = c_y + h / dynamic_box;
     for (int u = l_x; u < r_x; ++u) {
         for (int v = t_y; v < b_y; ++v) {
             float depth = image_depth_.at<short int>(cv::Point(u, v)) / 1000.0;
-            if (depth > 0) {
+            if (depth > d - dynamic_depth && depth < d + dynamic_depth) {
                 sum_x += u;
                 sum_y += v;
                 mal++;
@@ -107,7 +109,7 @@ int SignDetection::CaculateDirectionNeu(int c_x, int c_y, int w, int h)
         for (int i = l_x; i < r_x; ++i) {
             for (int j = t_y; j < b_y; ++j) {
                 float depthN = image_depth_.at<short int>(cv::Point(i, j)) / 1000.0;
-                if (depthN > 0) {
+                if (depthN > d - dynamic_depth && depthN < d + dynamic_depth) {
                     cv::Vec3b value = image_color_.at<cv::Vec3b>(cv::Point(i, j));
                     if (i > x) {
                         sum_right += (value[0] + value[1] + value[2]);
@@ -161,10 +163,10 @@ int SignDetection::CaculateDirectionNeu(int c_x, int c_y, int w, int h)
 float SignDetection::CaculateDepth(int c_x, int c_y, int w, int h)
 {
     int mal = 0;
-    int l_x = c_x - w / 2;
-    int r_x = c_x + w / 2;
-    int t_y = c_y - h / 2;
-    int b_y = c_y + h / 2;
+    int l_x = c_x - w / 3;
+    int r_x = c_x + w / 3;
+    int t_y = c_y - h / 3;
+    int b_y = c_y + h / 3;
     float sum_depth = 0.0;
 
     for (int i = l_x; i < r_x; ++i) {
@@ -287,7 +289,7 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
                 if (depth <= 3.0) {
                     if (classIdPoint.x == 0 || classIdPoint.x == 1) {
                         //add direction caculate finktion
-                        int directId = CaculateDirectionNeu(centerX, centerY, width, height);
+                        int directId = CaculateDirectionNeu(centerX, centerY, width, height, depth);
 
                         classIds.push_back(directId);
                         confidences.push_back((float)confidence);

@@ -42,6 +42,8 @@ private:
     dynamic_reconfigure::Server<crc3_perception::DistanceConfig> server;
     dynamic_reconfigure::Server<crc3_perception::DistanceConfig>::CallbackType f;
     float dynamic_dis;
+    float dynamic_depth;
+    float dynamic_box;
     crc3_perception::detection detect_msg;
     int classId_target;
     ros::NodeHandle node_handle_;
@@ -76,7 +78,7 @@ private:
     void postprocess(Mat& frame, const vector<Mat>& outs);
     float CaculateDepth(int c_x, int c_y, int w, int h);
     int CaculateDirection(int c_x, int c_y, int w, int h);
-    int CaculateDirectionNeu(int c_x, int c_y, int w, int h);
+    int CaculateDirectionNeu(int c_x, int c_y, int w, int h, float d);
     float getAngelOfTwoVector(Point2f& pt1, Point2f& pt2, Point2f& c);
     void dynamic_callback(crc3_perception::DistanceConfig& config, uint32_t level);
 };
