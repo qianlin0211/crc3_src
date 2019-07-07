@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   cv_bridge
+  message_filters
 )
 
 ## System dependencies are found with CMake's conventions

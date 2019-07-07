@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 from std_msgs.msg import String, Header
 from sensor_msgs.msg import Image
-
+import message_filters
 
 # Set model here ############
 MODEL_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
@@ -46,20 +46,26 @@ with detection_graph.as_default():
 class Detector:
 
     def __init__(self):
-        self.image_pub = rospy.Publisher("debug_image", Image, queue_size=1)
+
         # self.object_pub = rospy.Publisher(
          #   "objects", Detection2DArray, queue_size=1)
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber(
-            "/kinect2/qhd/image_color_rect", Image, self.image_cb, queue_size=1, buff_size=2**24)
+        self.color_image_sub = message_filters.Subscriber(
+            "/kinect2/qhd/image_color_rect", Image)
+        self.depth_image_sub = message_filters.Subscriber(
+            "/kinect2/qhd/image_depth_rect", Image)
+        self.synchronizer = message_filters.ApproximateTimeSynchronizer(
+            [self.color_image_sub, self.depth_image_sub], queue_size=5, slop=0.1)
+        self.synchronizer.registerCallback(self.callback)
         self.image_pub = rospy.Publisher(
-            'masked_image', Image, queue_size=1)
+            'detected_image', Image, queue_size=1)
         self.sess = tf.Session(graph=detection_graph)
 
-    def image_cb(self, data):
+    def callback(self, color_msg, depth_msg):
         # objArray = Detection2DArray()
         try:
-            cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+            cv_image = self.bridge.imgmsg_to_cv2(color_msg, "bgr8")
+            depth_image = self.bridge.imgmsg_to_cv2(depth_msg) / 1000.0
         except CvBridgeError as e:
             print(e)
         image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
@@ -88,7 +94,7 @@ class Detector:
 
         det_image = self.display_instances(
             det_image, boxes[0], classes[0],
-                          class_names, scores[0])
+                          class_names, scores[0], depth_image)
        # for i in range(num_detections):
        #     class_id = int(classes[0][i])
         # print(boxes[0])
@@ -100,7 +106,7 @@ class Detector:
         colors = [tuple(255 * np.random.rand(3)) for _ in range(N)]
         return colors
 
-    def display_instances(self, image, boxes, ids, names, scores):
+    def display_instances(self, image, boxes, ids, names, scores, depth_image):
         n_instances = boxes.shape[0]
         if not n_instances:
             print('No instances to display')
@@ -121,6 +127,12 @@ class Detector:
             y2 = int(boxes[i][2] * image.shape[0])
             x2 = int(boxes[i][3] * image.shape[1])
             # print(y2)
+            dis = self.depth_find(y1, x1, y2, x2, image, depth_image)
+            # print(dis)
+            if dis > 0:
+
+                cv2.putText(image,  '%.2f m' % dis, (x1, y1 - 30),
+                            cv2.FONT_HERSHEY_COMPLEX, 1, (50, 255, 255), 2)
 
             # mask = masks[:,:, i]
             # image = apply_mask(image, mask, color)
@@ -136,6 +148,27 @@ class Detector:
             )
 
         return image
+
+    def depth_find(self, y1, x1, y2, x2, cv_image, cv_depth_image):
+
+        cx = (x1 + x2) / 2
+        cy = (y1 + y2) / 2
+        depth = 0
+        count = 0
+        for i in range(abs(x2 - x1) / 2):
+            for j in range(abs(y2 - y1) / 2):
+                x = i + min(x1, x2) + abs(x2 - x1) / 4
+                y = j + min(y1, y2) + abs(y2 - y1) / 4
+
+                if float(cv_depth_image[y, x]) > 0:
+                    depth += float(cv_depth_image[y, x])
+                    count += 1
+        if count == 0:
+            depth = float(cv_depth_image[cy, cx])
+        else:
+            depth = depth / count
+
+        return depth
 
 if __name__ == '__main__':
     rospy.init_node('detector_node')
