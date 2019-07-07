@@ -158,7 +158,7 @@ class Detector:
 
             caption = '{} {:.2f}'.format(label, score) if score else label
             image = cv2.putText(
-                image, label, (
+                image, caption, (
                     x1, y1 - 7), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 2
             )
         self.detect_pub.publish(detect)
