@@ -7,19 +7,11 @@ project(crc3_perception)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-add_compile_options(-std=c++11)
-find_package(OpenCV 3.4.5 REQUIRED)
-message("OpenCV library status:")
-message("    version: ${OpenCV_VERSION}")
-message( "    libraries: ${OpenCV_LIBS}")
-message( "    include path: ${OpenCV_INCLUDE_DIRS}")
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
-  OpenCV
   sensor_msgs
   std_msgs
-  roslib
   cv_bridge
 )
 
