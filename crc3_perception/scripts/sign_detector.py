@@ -90,7 +90,7 @@ class Detector:
         (boxes, scores, classes, num_detections) = self.sess.run([
             boxes, scores, classes, num_detections],
             feed_dict={image_tensor: image_np_expanded})
-        class_names = ['BG', 'left', 'right', 'forward', 'stop']
+        class_names = ['BG', 'left', 'right', 'straight', 'stop']
 
         det_image = self.display_instances(
             det_image, boxes[0], classes[0],
@@ -127,7 +127,7 @@ class Detector:
         for i, color in enumerate(colors):
             if not np.any(boxes[i]):
                 continue
-            if scores[i] < 0.7:
+            if scores[i] < 0.5:
                 break
 
             y1 = int(boxes[i][0] * image.shape[0])
