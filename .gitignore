@@ -1,1 +1,2 @@
 *.weights
+/cv_bridge
