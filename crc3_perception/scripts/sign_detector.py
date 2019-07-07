@@ -10,6 +10,7 @@ import numpy as np
 from std_msgs.msg import String, Header
 from sensor_msgs.msg import Image
 import message_filters
+from crc3_perception.msg import detection
 
 # Set model here ############
 MODEL_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
@@ -59,6 +60,8 @@ class Detector:
         self.synchronizer.registerCallback(self.callback)
         self.image_pub = rospy.Publisher(
             'detected_image', Image, queue_size=1)
+        self.detect_pub = rospy.Publisher(
+            'perception', detection, queue_size=1)
         self.sess = tf.Session(graph=detection_graph)
 
     def callback(self, color_msg, depth_msg):
@@ -116,6 +119,14 @@ class Detector:
         colors = self.random_colors(n_instances)
         height, width = image.shape[:2]
 
+        detect = detection()
+
+        # print(dis)
+        const_dis = 10000.0
+        stop_dis = 10000.0
+        detect.stop_sign_found = False
+        detect.dist_to_stop = 0.0
+        detect.direction = 'NONE'
         for i, color in enumerate(colors):
             if not np.any(boxes[i]):
                 continue
@@ -128,8 +139,15 @@ class Detector:
             x2 = int(boxes[i][3] * image.shape[1])
             # print(y2)
             dis = self.depth_find(y1, x1, y2, x2, image, depth_image)
-            # print(dis)
-            if dis > 0:
+            if int(ids[i]) == 4 and dis < stop_dis and dis > 0.0:
+                detect.stop_sign_found = True
+                detect.dist_to_stop = dis
+                stop_dis = dis
+            if dis < const_dis and int(ids[i]) != 4:
+                detect.direction = names[int(ids[i])]
+                const_dis = dis
+
+            if dis > 0.0:
 
                 cv2.putText(image,  '%.2f m' % dis, (x1, y1 - 30),
                             cv2.FONT_HERSHEY_COMPLEX, 1, (50, 255, 255), 2)
@@ -146,6 +164,7 @@ class Detector:
                 image, label, (
                     x1, y1 - 7), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 2
             )
+        self.detect_pub.publish(detect)
 
         return image
 
