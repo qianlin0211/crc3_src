@@ -2,6 +2,7 @@
 import tensorflow as tf
 from cv_bridge import CvBridge, CvBridgeError
 import rospy
+import rospkg
 
 import os
 import sys
@@ -13,20 +14,16 @@ import message_filters
 from crc3_perception.msg import detection
 
 # Set model here ############
-MODEL_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
 # By default models are stored in data/models/
-MODEL_PATH = os.path.join(
-    os.path.dirname(sys.path[0]), 'data', 'models', MODEL_NAME)
+rospack = rospkg.RosPack()
+ROOT_PATH = rospack.get_path('crc3_perception')
+MODEL_PATH = ROOT_PATH + '/models'
 # Path to frozen detection graph. This is the actual model that is used
 # for the object detection.
 PATH_TO_CKPT = MODEL_PATH + '/frozen_inference_graph.pb'
 # Set the label map file here ###########
-LABEL_NAME = 'sign_label.pbtxt'
 # By default label maps are stored in data/labels/
-PATH_TO_LABELS = os.path.join(
-    os.path.dirname(sys.path[0]), 'data', 'labels', LABEL_NAME)
 # Set the number of classes here #########
-NUM_CLASSES = 4
 
 
 detection_graph = tf.Graph()
