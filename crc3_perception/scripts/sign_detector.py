@@ -51,8 +51,10 @@ class Detector:
          #   "objects", Detection2DArray, queue_size=1)
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber(
-            "/kinect2/hd/image_color_rect", Image, self.image_cb, queue_size=1, buff_size=2**24)
-        self.sess = tf.Session(graph=detection_graph, config=config)
+            "/kinect2/qhd/image_color_rect", Image, self.image_cb, queue_size=1, buff_size=2**24)
+        self.image_pub = rospy.Publisher(
+            'masked_image', Image, queue_size=1)
+        self.sess = tf.Session(graph=detection_graph)
 
     def image_cb(self, data):
         # objArray = Detection2DArray()
@@ -61,6 +63,7 @@ class Detector:
         except CvBridgeError as e:
             print(e)
         image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
+        det_image = np.copy(image)
 
         # the array based representation of the image will be used later in order to prepare the
         # result image with boxes and labels on it.
@@ -81,10 +84,60 @@ class Detector:
         (boxes, scores, classes, num_detections) = self.sess.run([
             boxes, scores, classes, num_detections],
             feed_dict={image_tensor: image_np_expanded})
-        print(classes)
+        class_names = ['BG', 'left', 'right', 'forward', 'stop']
 
+        det_image = self.display_instances(
+            det_image, boxes[0], classes[0],
+                          class_names, scores[0])
+       # for i in range(num_detections):
+       #     class_id = int(classes[0][i])
+        # print(boxes[0])
+        marked_image_msg = self.bridge.cv2_to_imgmsg(det_image, 'rgb8')
+        self.image_pub.publish(marked_image_msg)
 
-def main(args):
+    def random_colors(self, N):
+        np.random.seed(1)
+        colors = [tuple(255 * np.random.rand(3)) for _ in range(N)]
+        return colors
+
+    def display_instances(self, image, boxes, ids, names, scores):
+        n_instances = boxes.shape[0]
+        if not n_instances:
+            print('No instances to display')
+        else:
+            assert boxes.shape[0] == ids.shape[0]
+
+        colors = self.random_colors(n_instances)
+        height, width = image.shape[:2]
+
+        for i, color in enumerate(colors):
+            if not np.any(boxes[i]):
+                continue
+            if scores[i] < 0.7:
+                break
+
+            y1 = int(boxes[i][0] * image.shape[0])
+            x1 = int(boxes[i][1] * image.shape[1])
+            y2 = int(boxes[i][2] * image.shape[0])
+            x2 = int(boxes[i][3] * image.shape[1])
+            # print(y2)
+
+            # mask = masks[:,:, i]
+            # image = apply_mask(image, mask, color)
+            image = cv2.rectangle(image, (x1, y1), (x2, y2), (125, 255, 50), 2)
+
+            label = names[int(ids[i])]
+            score = scores[i] if scores is not None else None
+
+            caption = '{} {:.2f}'.format(label, score) if score else label
+            image = cv2.putText(
+                image, label, (
+                    x1, y1 - 7), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 2
+            )
+
+        return image
+
+if __name__ == '__main__':
     rospy.init_node('detector_node')
     obj = Detector()
     rospy.spin()
