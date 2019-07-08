@@ -119,10 +119,10 @@ class Detector:
         detect = detection()
 
         # print(dis)
-        const_dis = 10000.0
-        stop_dis = 10000.0
+        const_dis = 2.5
+        stop_dis = 2.5
         detect.stop_sign_found = False
-        detect.dist_to_stop = 0.0
+        detect.dist_to_stop = -0.0
         detect.direction = 'NONE'
         for i, color in enumerate(colors):
             if not np.any(boxes[i]):
@@ -161,7 +161,8 @@ class Detector:
                 image, caption, (
                     x1, y1 - 7), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 2
             )
-        self.detect_pub.publish(detect)
+        if min(const_dis, stop_dis) < 2.5:
+            self.detect_pub.publish(detect)
 
         return image
 
@@ -171,18 +172,20 @@ class Detector:
         cy = (y1 + y2) / 2
         depth = 0
         count = 0
-        for i in range(abs(x2 - x1) / 2):
-            for j in range(abs(y2 - y1) / 2):
-                x = i + min(x1, x2) + abs(x2 - x1) / 4
-                y = j + min(y1, y2) + abs(y2 - y1) / 4
+        for i in range(int(abs(x2 - x1) / 1.5)):
+            for j in range(int(abs(y2 - y1) / 1.5)):
+                x = i + min(x1, x2) + int(abs(x2 - x1) / 3)
+                y = j + min(y1, y2) + int(abs(y2 - y1) / 3)
 
                 if float(cv_depth_image[y, x]) > 0:
                     depth += float(cv_depth_image[y, x])
                     count += 1
         if count == 0:
             depth = float(cv_depth_image[cy, cx])
+            # depth = 0.0
         else:
-            depth = depth / count
+            # depth = depth / count
+            depth = float(cv_depth_image[cy, cx])
 
         return depth
 
