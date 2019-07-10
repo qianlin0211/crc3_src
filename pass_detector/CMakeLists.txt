@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(crc3_add_task)
+project(pass_detector)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -7,14 +7,22 @@ project(crc3_add_task)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+add_compile_options(-std=c++11)
+find_package(OpenCV 3.4.5 REQUIRED)
+message("OpenCV library status:")
+message("    version: ${OpenCV_VERSION}")
+message( "    libraries: ${OpenCV_LIBS}")
+message( "    include path: ${OpenCV_INCLUDE_DIRS}")
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
+  OpenCV
   sensor_msgs
   std_msgs
   roslib
-  tf
-  image_geometry
+  cv_bridge
+  message_filters
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -51,11 +59,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-#add_message_files(
-#   FILES
-#   detection.msg
-##   Message2.msg
-# )
+add_message_files(
+   FILES
+   detection.msg
+#   Message2.msg
+ )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -72,10 +80,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-#generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-#   )
+generate_messages(
+   DEPENDENCIES
+   std_msgs  # Or other packages containing msgs
+   )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -93,9 +101,9 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
 #generate_dynamic_reconfigure_options(
-#  cfg/Distance.cfg
-#   cfg/DynReconf2.cfg
-#)
+#   cfg/Distance.cfg
+##   cfg/DynReconf2.cfg
+# )
 
 ###################################
 ## catkin specific configuration ##
@@ -106,12 +114,12 @@ find_package(catkin REQUIRED COMPONENTS
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-#catkin_package(
+catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES crc3_perception
-#  CATKIN_DEPENDS message_runtime
+  CATKIN_DEPENDS message_runtime
 #  DEPENDS system_lib
-#)
+)
 
 ###########
 ## Build ##
@@ -122,6 +130,7 @@ find_package(catkin REQUIRED COMPONENTS
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  ${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake
 )
 
 ## Declare a C++ library
