@@ -190,7 +190,7 @@ void SignDetection::postprocess(Mat& frame, const vector<Mat>& outs)
         q.setRPY(0, 0, 0);
         transform.setRotation(q);
         br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), depth_camera_model_.tfFrame().c_str(), "/passenger_frame"));
-        lt_.lookupTransform("/world", "/passenger_frame", ros::Time(0), lt_transform_);
+        lt_.lookupTransform("/stargazer", "/passenger_frame", ros::Time(0), lt_transform_);
         pass_x = lt_transform_.getOrigin().x();
         pass_y = lt_transform_.getOrigin().y();
         if (last_y == 0.0) {
