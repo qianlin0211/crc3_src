@@ -57,10 +57,10 @@ private:
     // const string classesFile_ = pro_dir_ + "/data_file/coco.names";
     // const String modelWeights_ = pro_dir_ + "/data_file/yolov3.weights";
     const string pro_dir_
-        = ros::package::getPath("crc3_perception");
-    const String modelConfiguration_ = pro_dir_ + "/src/sign_detection/data_file/passenger_tiny.cfg";
-    const string classesFile_ = pro_dir_ + "/src/sign_detection/data_file/passenger.names";
-    const String modelWeights_ = pro_dir_ + "/src/sign_detection/data_file/passenger_tiny_final.weights";
+        = ros::package::getPath("pass_detector");
+    const String modelConfiguration_ = pro_dir_ + "/src/data_file/passenger_tiny.cfg";
+    const string classesFile_ = pro_dir_ + "/src/data_file/passenger.names";
+    const String modelWeights_ = pro_dir_ + "/src/data_file/passenger_tiny_final.weights";
 
     const float confThreshold_ = 0.5; // Confidence threshold
     const float nmsThreshold_ = 0.4;  // Non-maximum suppression threshold

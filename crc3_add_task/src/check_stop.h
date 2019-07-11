@@ -35,12 +35,13 @@ private:
     tf::TransformListener lt_;
     float pass_x;
     float pass_y;
-    float last_y = 0.0;
+    float last_y;
     ros::NodeHandle node_handle_;
     ros::Publisher result_pub_;
     ros::Subscriber info_sub_;
+    ros::Subscriber pos_sub_;
 
-    void Callback(const sensor_msgs::Image::ConstPtr& image_color_msg, const sensor_msgs::Image::ConstPtr& image_depth_msg);
+    void Callback(const pass_detector::detection::ConstPtr& msg);
     void infoCb(const sensor_msgs::CameraInfo::ConstPtr& msg);
 };
 #endif
