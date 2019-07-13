@@ -35,7 +35,13 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
         q.setRPY(0, 0, 0);
         transform.setRotation(q);
         br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/kinect2_ir_optical_frame", "/passenger_frame"));
-        lt_.lookupTransform("/world", "/passenger_frame", ros::Time(0), lt_transform_);
+        try {
+            lt_.lookupTransform("/world", "/passenger_frame", ros::Time(0), lt_transform_);
+        } catch (tf::TransformException& ex) {
+            ROS_ERROR("%s", ex.what());
+            ros::Duration(1.0).sleep();
+            ros::spinOnce();
+        }
         pass_x = lt_transform_.getOrigin().x();
         pass_y = lt_transform_.getOrigin().y();
         if (last_y == 0.0) {
