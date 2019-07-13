@@ -140,7 +140,7 @@ class Detector:
                 detect.stop_sign_found = True
                 detect.dist_to_stop = dis
                 stop_dis = dis
-            if dis < const_dis and int(ids[i]) != 4:
+            if dis < const_dis and int(ids[i]) != 4 and dis > 0.0:
                 detect.direction = names[int(ids[i])]
                 const_dis = dis
 
