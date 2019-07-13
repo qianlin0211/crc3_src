@@ -34,7 +34,7 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
         tf::Quaternion q;
         q.setRPY(0, 0, 0);
         transform.setRotation(q);
-        br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), depth_camera_model_.tfFrame().c_str(), "/passenger_frame"));
+        br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/kinect2_ir_optical_frame", "/passenger_frame"));
         //        lt_.lookupTransform("/stargazer", "/passenger_frame", ros::Time(0), lt_transform_);
         //        pass_x = lt_transform_.getOrigin().x();
         //        pass_y = lt_transform_.getOrigin().y();
