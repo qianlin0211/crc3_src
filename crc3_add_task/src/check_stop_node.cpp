@@ -35,23 +35,23 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
         q.setRPY(0, 0, 0);
         transform.setRotation(q);
         br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/kinect2_ir_optical_frame", "/passenger_frame"));
-        //        lt_.lookupTransform("/stargazer", "/passenger_frame", ros::Time(0), lt_transform_);
-        //        pass_x = lt_transform_.getOrigin().x();
-        //        pass_y = lt_transform_.getOrigin().y();
-        //        if (last_y == 0.0) {
-        //            last_y = pass_y;
-        //        }
-        //        float move = pass_y - last_y;
-        //        last_y = pass_y;
-        //        if (move > 0.2 && pass_y > 0 && pass_y < 0.5 && dis < 1.5) {
-        //            str_msg.data = "stop";
-        //        } else {
-        //            str_msg.data = "go";
-        //        }
-        //    } else {
-        //        str_msg.data = "go";
+        lt_.lookupTransform("/world", "/passenger_frame", ros::Time(0), lt_transform_);
+        pass_x = lt_transform_.getOrigin().x();
+        pass_y = lt_transform_.getOrigin().y();
+        if (last_y == 0.0) {
+            last_y = pass_y;
+        }
+        float move = pass_y - last_y;
+        last_y = pass_y;
+        if (move > 0.2 && pass_y > 0 && pass_y < 0.5 && dis < 1.5) {
+            str_msg.data = "stop";
+        } else {
+            str_msg.data = "go";
+        }
+    } else {
+        str_msg.data = "go";
     }
-    //    result_pub_.publish(str_msg);
+    result_pub_.publish(str_msg);
 }
 int main(int argc, char** argv)
 {
