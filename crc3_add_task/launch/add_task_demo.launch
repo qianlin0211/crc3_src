@@ -1,0 +1,11 @@
+<launch>
+
+  
+  <include file="$(find pass_detector)/launch/pass_detect.launch" />
+
+  <node pkg="crc3_add_task" type="check_stop_node" name="check_stop_node" output="screen"/>
+
+
+
+
+</launch>

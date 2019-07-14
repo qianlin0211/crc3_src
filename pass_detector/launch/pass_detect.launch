@@ -1,0 +1,10 @@
+<launch>
+
+  
+  <node pkg="pass_detector" type="pass_detector_node" name="pass_detector_node" output="screen"/>
+
+
+
+
+
+</launch>

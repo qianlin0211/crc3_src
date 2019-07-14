@@ -39,13 +39,13 @@ private:
     tf::TransformListener lt_;
     float pass_x;
     float pass_y;
-    float last_x;
+    float last_y;
     ros::NodeHandle node_handle_;
     ros::Publisher result_pub_;
     ros::Subscriber info_sub_;
     ros::Subscriber pos_sub_;
-    float x_min;
-    float x_max;
+    float y_min;
+    float y_max;
     float movement;
     float dis_stop;
     void Callback(const pass_detector::detection::ConstPtr& msg);
