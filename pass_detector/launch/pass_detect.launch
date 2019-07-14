@@ -1,7 +1,7 @@
 <launch>
 
   
-  <node pkg="pass_detector" type="pass_detector_node" name="pass_detector_node" output="screen"/>
+  <node pkg="pass_detector" type="pass_detection_node" name="pass_detection_node" output="screen"/>
 
 
 
