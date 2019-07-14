@@ -3,7 +3,7 @@
 
 CheckStop::CheckStop(ros::NodeHandle& node_handle)
     : node_handle_(node_handle)
-    , last_y(0.0)
+    , last_x(0.0)
 {
 
     result_pub_ = node_handle_.advertise<std_msgs::String>("/go_stop", 1);
@@ -14,8 +14,8 @@ CheckStop::CheckStop(ros::NodeHandle& node_handle)
 }
 void CheckStop::dynamic_callback(crc3_add_task::DistanceConfig& config, uint32_t level)
 {
-    y_min = config.y_min;
-    y_max = config.y_max;
+    x_min = config.x_min;
+    x_max = config.x_max;
     movement = config.movement;
     dis_stop = config.dis_stop;
 }
@@ -54,14 +54,14 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
         pass_x = lt_transform_.getOrigin().x();
         pass_y = lt_transform_.getOrigin().y();
 
-        if (last_y == 0.0) {
-            last_y = pass_y;
+        if (last_x == 0.0) {
+            last_x = pass_x;
         }
-        float move = pass_y - last_y;
-        cout << "passenger_x:" << pass_x << ","
-             << "passenger_y:" << pass_y << ",movement:" << move << ",distance:" << dis << endl;
-        last_y = pass_y;
-        if (move > movement && dis < dis_stop || pass_y > y_min && pass_y < y_max && dis < dis_stop) {
+        float move = (last_x - pass_x);
+        cout << "passenger_x:" << pass_x << ", "
+             << "passenger_y:" << pass_y << ", movement:" << move << ", distance:" << dis << endl;
+        last_x = pass_x;
+        if (move > movement && dis < dis_stop || pass_x > x_min && pass_x < x_max && dis < dis_stop) {
             str_msg.data = "stop";
         } else {
             str_msg.data = "go";
