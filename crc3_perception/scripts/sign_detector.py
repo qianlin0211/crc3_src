@@ -170,22 +170,23 @@ class Detector:
 
         cx = (x1 + x2) / 2
         cy = (y1 + y2) / 2
-        depth = 0
-        count = 0
-        for i in range(abs(x2 - x1) / 2):
-            for j in range(abs(y2 - y1) / 2):
-                x = i + min(x1, x2) + abs(x2 - x1) / 4
-                y = j + min(y1, y2) + abs(y2 - y1) / 4
+        depth = float(cv_depth_image[cy, cx])
+    #    depth = 0
+    #    count = 0
+    #    for i in range(abs(x2 - x1) / 2):
+    #        for j in range(abs(y2 - y1) / 2):
+    #            x = i + min(x1, x2) + abs(x2 - x1) / 4
+    #            y = j + min(y1, y2) + abs(y2 - y1) / 4
 
-                if float(cv_depth_image[y, x]) > 0:
-                    depth += float(cv_depth_image[y, x])
-                    count += 1
-        if count == 0:
-            depth = float(cv_depth_image[cy, cx])
-            # depth = 0.0
-        else:
-            # depth = depth / count
-            depth = float(cv_depth_image[cy, cx])
+    #            if float(cv_depth_image[y, x]) > 0:
+    #                depth += float(cv_depth_image[y, x])
+    #                count += 1
+    #    if count == 0:
+    #        depth = float(cv_depth_image[cy, cx])
+    # depth = 0.0
+    #    else:
+    # depth = depth / count
+    #        depth = float(cv_depth_image[cy, cx])
 
         return depth
 
