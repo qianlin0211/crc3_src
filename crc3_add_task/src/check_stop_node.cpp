@@ -59,9 +59,9 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
         }
         float move = pass_y - last_y;
         cout << "passenger_x:" << pass_x << ","
-             << "passenger_y:" << pass_y << ",movement:" << move << endl;
+             << "passenger_y:" << pass_y << ",movement:" << move << ",distance:" << dis << endl;
         last_y = pass_y;
-        if (move > 0.2 && dis < 1.5 || pass_y > 0 && pass_y < 0.5 && dis < 1.5) {
+        if (move > movement && dis < dis_stop || pass_y > y_min && pass_y < y_max && dis < dis_stop) {
             str_msg.data = "stop";
         } else {
             str_msg.data = "go";

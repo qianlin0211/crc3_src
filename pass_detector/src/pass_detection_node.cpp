@@ -158,7 +158,9 @@ void PassDetection::postprocess(Mat& frame, const vector<Mat>& outs)
         int idx = indices[i];
         Rect box = boxes[idx];
         float dep = depth_vec[idx];
-        drawPred(classIds[idx], confidences[idx], box.x, box.y, box.x + box.width, box.y + box.height, frame, dep);
+        if (dep < 3.0) {
+            drawPred(classIds[idx], confidences[idx], box.x, box.y, box.x + box.width, box.y + box.height, frame, dep);
+        }
         if (dep <= last_dep) {
             dis = dep;
             cx = box.x + box.width / 2;
