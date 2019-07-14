@@ -9,6 +9,15 @@ CheckStop::CheckStop(ros::NodeHandle& node_handle)
     result_pub_ = node_handle_.advertise<std_msgs::String>("/go_stop", 1);
     info_sub_ = node_handle_.subscribe("/kinect2/qhd/camera_info", 1, &CheckStop::infoCb, this);
     pos_sub_ = node_handle_.subscribe("/position", 1, &CheckStop::Callback, this);
+    f = boost::bind(&CheckStop::dynamic_callback, this, _1, _2);
+    server.setCallback(f);
+}
+void CheckStop::dynamic_callback(crc3_add_task::DistanceConfig& config, uint32_t level)
+{
+    y_min = config.y_min;
+    y_max = config.y_max;
+    movement = config.movement;
+    dis_stop = config.dis_stop;
 }
 void CheckStop::infoCb(const sensor_msgs::CameraInfo::ConstPtr& msg)
 {
@@ -44,14 +53,15 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
         }
         pass_x = lt_transform_.getOrigin().x();
         pass_y = lt_transform_.getOrigin().y();
-        cout << pass_x << "," << pass_y << endl;
 
         if (last_y == 0.0) {
             last_y = pass_y;
         }
         float move = pass_y - last_y;
+        cout << "passenger_x:" << pass_x << ","
+             << "passenger_y:" << pass_y << ",movement:" << move << endl;
         last_y = pass_y;
-        if (move > 0.2 && pass_y > 0 && pass_y < 0.5 && dis < 1.5) {
+        if (move > 0.2 && dis < 1.5 || pass_y > 0 && pass_y < 0.5 && dis < 1.5) {
             str_msg.data = "stop";
         } else {
             str_msg.data = "go";

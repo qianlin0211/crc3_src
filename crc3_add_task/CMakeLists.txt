@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   image_geometry
   pass_detector
+  dynamic_reconfigure
 )
 
 ## System dependencies are found with CMake's conventions
@@ -92,6 +93,10 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * uncomment the "generate_dynamic_reconfigure_options" section below
 ##     and list every .cfg file to be processed
 
+generate_dynamic_reconfigure_options(
+   cfg/Distance.cfg
+#   cfg/DynReconf2.cfg
+ )
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
 #generate_dynamic_reconfigure_options(
 #  cfg/Distance.cfg
@@ -123,6 +128,7 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  ${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake
 )
 
 ## Declare a C++ library
