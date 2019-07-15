@@ -170,6 +170,7 @@ void PassDetection::postprocess(Mat& frame, const vector<Mat>& outs)
         }
     }
     //debug error maybe hier
+    pass_detector::detection pub_msg_;
     pub_msg_.cx = cx;
     pub_msg_.cy = cy;
     pub_msg_.dis = dis;
