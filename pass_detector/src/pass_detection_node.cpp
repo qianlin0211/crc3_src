@@ -15,26 +15,24 @@ PassDetection::PassDetection(ros::NodeHandle& node_handle)
 
 float PassDetection::CaculateDepth(int c_x, int c_y, int w, int h)
 {
-    int mal = 0;
-    int l_x = c_x - w / 4;
-    int r_x = c_x + w / 4;
-    int t_y = c_y - h / 4;
-    int b_y = c_y + h / 4;
-    float sum_depth = 0.0;
+    int l_x = c_x - w / 2;
+    int r_x = c_x + w / 2;
+    int t_y = c_y - h / 2;
+    int b_y = c_y + h / 2;
+    float last_depth = 1000000.0;
+    float true_depth;
 
     for (int i = l_x; i < r_x; ++i) {
         for (int j = t_y; j < b_y; ++j) {
             float depth = image_depth_.at<short int>(cv::Point(i, j)) / 1000.0;
-            if (depth > 0) {
-                sum_depth += depth;
-                mal++;
+            if (depth > 0 && depth < last_depth) {
+
+                true_depth = depth;
+                last_depth = depth;
             }
         }
     }
-    if (mal > 0) {
-        return (sum_depth / mal);
-    }
-    return 0.0;
+    return true_depth;
 }
 
 void PassDetection::Callback(const sensor_msgs::Image::ConstPtr& msg, const sensor_msgs::Image::ConstPtr& image_depth_msg)
