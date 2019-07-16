@@ -48,6 +48,7 @@ private:
     float y_max;
     float movement;
     float dis_stop;
+    float mal;
     void Callback(const pass_detector::detection::ConstPtr& msg);
     void infoCb(const sensor_msgs::CameraInfo::ConstPtr& msg);
     void dynamic_callback(crc3_add_task::DistanceConfig& config, uint32_t level);

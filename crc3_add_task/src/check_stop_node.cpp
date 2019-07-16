@@ -18,6 +18,7 @@ void CheckStop::dynamic_callback(crc3_add_task::DistanceConfig& config, uint32_t
     y_max = config.y_max;
     movement = config.movement;
     dis_stop = config.dis_stop;
+    mal = config.mal;
 }
 void CheckStop::infoCb(const sensor_msgs::CameraInfo::ConstPtr& msg)
 {
@@ -34,10 +35,12 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
     float dis = msg->dis;
     int cx = msg->cx;
     int cy = msg->cy;
+    float dis_c;
     if (dis != 0.0) {
+        dis_c = dis + abs(cx - 480) / 500 * (1 / dis) * mal;
         cv::Point2d pt_cv(cy, cx);
         cv::Point3d xyz = depth_camera_model_.projectPixelTo3dRay(pt_cv);
-        xyz *= (dis / xyz.z);
+        xyz *= (dis_c / xyz.z);
         tf::Transform transform;
         transform.setOrigin(tf::Vector3(xyz.x, xyz.y, xyz.z));
         tf::Quaternion q;

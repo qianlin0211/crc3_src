@@ -137,7 +137,7 @@ void PassDetection::postprocess(Mat& frame, const vector<Mat>& outs)
                 int left = centerX - width / 2;
                 int top = centerY - height / 2;
                 float depth = CaculateDepth(centerX, centerY, width, height);
-                if (depth <= 5.0) {
+                if (depth <= 4.0) {
                     classIds.push_back(classIdPoint.x);
                     confidences.push_back((float)confidence);
                     boxes.push_back(Rect(left, top, width, height));
@@ -151,12 +151,16 @@ void PassDetection::postprocess(Mat& frame, const vector<Mat>& outs)
     // lower confidences
     vector<int> indices;
     float last_dep = 1000.0;
+    float dis = 0.0;
+    int cx = 0;
+    int cy = 0;
+    pass_detector::detection pub_msg_;
     NMSBoxes(boxes, confidences, confThreshold_, nmsThreshold_, indices);
     for (size_t i = 0; i < indices.size(); ++i) {
         int idx = indices[i];
         Rect box = boxes[idx];
         float dep = depth_vec[idx];
-        if (dep < 3.0) {
+        if (dep <= 4.0) {
             drawPred(classIds[idx], confidences[idx], box.x, box.y, box.x + box.width, box.y + box.height, frame, dep);
         }
         if (dep <= last_dep) {
@@ -168,11 +172,11 @@ void PassDetection::postprocess(Mat& frame, const vector<Mat>& outs)
         }
     }
     //debug error maybe hier
-    pass_detector::detection pub_msg_;
     pub_msg_.cx = cx;
     pub_msg_.cy = cy;
     pub_msg_.dis = dis;
     result_pub_.publish(pub_msg_);
+    cout << abs(cx - 480) << endl;
 }
 
 void PassDetection::drawPred(int classId, float conf, int left, int top, int right, int bottom, Mat& frame, float distance)

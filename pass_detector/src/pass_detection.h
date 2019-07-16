@@ -40,10 +40,6 @@ public:
     PassDetection(ros::NodeHandle& node_handle);
 
 private:
-    pass_detector::detection pub_msg_;
-    float dis = 0.0;
-    int cx = 0;
-    int cy = 0;
     ros::NodeHandle node_handle_;
     ros::Publisher result_pub_;
     ros::Publisher detected_image_pub_;
@@ -62,7 +58,7 @@ private:
     const string classesFile_ = pro_dir_ + "/src/data_file/passenger.names";
     const String modelWeights_ = pro_dir_ + "/src/data_file/passenger_tiny_final.weights";
 
-    const float confThreshold_ = 0.5; // Confidence threshold
+    const float confThreshold_ = 0.6; // Confidence threshold
     const float nmsThreshold_ = 0.4;  // Non-maximum suppression threshold
     const int inpWidth_ = 416;        // Width of network's input image
     const int inpHeight_ = 416;       // Height of network's input image
