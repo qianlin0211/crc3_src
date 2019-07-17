@@ -176,7 +176,6 @@ void PassDetection::postprocess(Mat& frame, const vector<Mat>& outs)
     pub_msg_.cy = cy;
     pub_msg_.dis = dis;
     result_pub_.publish(pub_msg_);
-    cout << abs(cx - 480) << endl;
 }
 
 void PassDetection::drawPred(int classId, float conf, int left, int top, int right, int bottom, Mat& frame, float distance)

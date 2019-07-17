@@ -39,6 +39,7 @@ private:
     tf::TransformListener lt_;
     float pass_x;
     float pass_y;
+    float pass_z;
     float last_y;
     ros::NodeHandle node_handle_;
     ros::Publisher result_pub_;

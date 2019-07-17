@@ -37,7 +37,8 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
     int cy = msg->cy;
     float dis_c;
     if (dis != 0.0) {
-        dis_c = dis + abs(cx - 480) / 500 * (1 / dis) * mal;
+        dis_c = dis + float(abs(cx - 480)) / 500 * (1 / dis) * mal;
+        cout << "cx: " << cx << endl;
         cv::Point2d pt_cv(cy, cx);
         cv::Point3d xyz = depth_camera_model_.projectPixelTo3dRay(pt_cv);
         xyz *= (dis_c / xyz.z);
@@ -56,13 +57,14 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
         }
         pass_x = lt_transform_.getOrigin().x();
         pass_y = lt_transform_.getOrigin().y();
+        pass_z = lt_transform_.getOrigin().z();
 
         if (last_y == 0.0) {
             last_y = pass_y;
         }
         float move = (last_y - pass_y);
         cout << "passenger_x:" << pass_x << ", "
-             << "passenger_y:" << pass_y << ", movement:" << move << ", distance:" << dis << endl;
+             << "passenger_y:" << pass_y << " ,pass_z:" << pass_z << ", movement:" << move << ", distance:" << dis << endl;
         last_y = pass_y;
         if (move > movement && dis < dis_stop || pass_y > y_min && pass_y < y_max && dis < dis_stop) {
             str_msg.data = "stop";
