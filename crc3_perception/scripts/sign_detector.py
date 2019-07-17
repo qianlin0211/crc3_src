@@ -119,8 +119,8 @@ class Detector:
         detect = detection()
 
         # print(dis)
-        const_dis = 2.5
-        stop_dis = 2.5
+        const_dis = 3.0
+        stop_dis = 3.0
         detect.stop_sign_found = False
         detect.dist_to_stop = -0.0
         detect.direction = 'NONE'
@@ -161,7 +161,7 @@ class Detector:
                 image, caption, (
                     x1, y1 - 7), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 2
             )
-        if min(const_dis, stop_dis) < 2.5:
+        if min(const_dis, stop_dis) < 3.0:
             self.detect_pub.publish(detect)
 
         return image
