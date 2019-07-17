@@ -41,6 +41,7 @@ private:
     float pass_y;
     float pass_z;
     float last_y;
+    int last_cx;
     ros::NodeHandle node_handle_;
     ros::Publisher result_pub_;
     ros::Subscriber info_sub_;

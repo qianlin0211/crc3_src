@@ -4,6 +4,7 @@
 CheckStop::CheckStop(ros::NodeHandle& node_handle)
     : node_handle_(node_handle)
     , last_y(0.0)
+    , last_cx(0)
 {
 
     result_pub_ = node_handle_.advertise<std_msgs::String>("/go_stop", 1);
@@ -37,7 +38,7 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
     int cy = msg->cy;
     float dis_c;
     if (dis != 0.0) {
-        dis_c = dis + float(abs(cx - 480)) / 500 * (1 / dis) * mal;
+        dis_c = dis + float(abs(cx - 480)) / 500 * (1 / dis);
         cout << "cx: " << cx << endl;
         cv::Point2d pt_cv(cy, cx);
         cv::Point3d xyz = depth_camera_model_.projectPixelTo3dRay(pt_cv);
@@ -49,7 +50,7 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
         transform.setRotation(q);
         br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/kinect2_ir_optical_frame", "/passenger_frame"));
         try {
-            lt_.lookupTransform("/world", "/passenger_frame", ros::Time(0), lt_transform_);
+            lt_.lookupTransform("/world", "/vehicle_rear_axle", ros::Time(0), lt_transform_);
         } catch (tf::TransformException& ex) {
             ROS_INFO("%s", ex.what());
             ros::Duration(1.0).sleep();
@@ -62,12 +63,25 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
         if (last_y == 0.0) {
             last_y = pass_y;
         }
-        float move = (last_y - pass_y);
+        if (last_cx == 0) {
+            last_cx = cx;
+        }
+        int cx_move = last_cx - cx;
+        float move = abs(last_y - pass_y);
         cout << "passenger_x:" << pass_x << ", "
              << "passenger_y:" << pass_y << " ,pass_z:" << pass_z << ", movement:" << move << ", distance:" << dis << endl;
         last_y = pass_y;
-        if (move > movement && dis < dis_stop || pass_y > y_min && pass_y < y_max && dis < dis_stop) {
+        last_cx = cx;
+        if (dis < dis_stop) {
             str_msg.data = "stop";
+            if (move < movement) {
+                if (cx_move > mal) {
+                    str_msg.data = "stop";
+                } else {
+                    str_msg.data = "go";
+                }
+            }
+
         } else {
             str_msg.data = "go";
         }
