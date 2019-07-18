@@ -41,7 +41,7 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
         cout << "cx: " << cx << endl;
         cv::Point2d pt_cv(cy, cx);
         cv::Point3d xyz = depth_camera_model_.projectPixelTo3dRay(pt_cv);
-        xyz *= (dis_c / xyz.z);
+        xyz *= (dis / xyz.z);
         tf::Transform transform;
         transform.setOrigin(tf::Vector3(xyz.x, xyz.y, xyz.z));
         tf::Quaternion q;
@@ -49,7 +49,7 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
         transform.setRotation(q);
         br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/kinect2_ir_optical_frame", "/passenger_frame"));
         try {
-            lt_.lookupTransform("/world", "/passenger_frame", ros::Time(0), lt_transform_);
+            lt_.lookupTransform("/kinect2_ir_optical_frame", "/passenger_frame", ros::Time(0), lt_transform_);
         } catch (tf::TransformException& ex) {
             ROS_INFO("%s", ex.what());
             ros::Duration(1.0).sleep();
