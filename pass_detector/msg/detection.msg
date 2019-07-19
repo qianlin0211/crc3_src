@@ -1,4 +1,5 @@
-int16 cx
-int16 cy
+float32 x
+float32 y
 
+float32 z
 float32 dis

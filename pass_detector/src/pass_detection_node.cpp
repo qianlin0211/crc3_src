@@ -10,6 +10,7 @@ PassDetection::PassDetection(ros::NodeHandle& node_handle)
 
     result_pub_ = node_handle_.advertise<pass_detector::detection>("/position", 1);
     detected_image_pub_ = node_handle_.advertise<sensor_msgs::Image>("/detected_image", 1);
+    info_sub_ = node_handle_.subscribe("/kinect2/qhd/camera_info", 1, &PassDetection::infoCb, this);
     sync.registerCallback(boost::bind(&PassDetection::Callback, this, _1, _2));
 }
 
@@ -154,7 +155,8 @@ void PassDetection::postprocess(Mat& frame, const vector<Mat>& outs)
     float dis = 0.0;
     int cx = 0;
     int cy = 0;
-    pass_detector::detection pub_msg_;
+    int w = 0;
+    int h = 0;
     NMSBoxes(boxes, confidences, confThreshold_, nmsThreshold_, indices);
     for (size_t i = 0; i < indices.size(); ++i) {
         int idx = indices[i];
@@ -167,17 +169,92 @@ void PassDetection::postprocess(Mat& frame, const vector<Mat>& outs)
             dis = dep;
             cx = box.x + box.width / 2;
             cy = box.y + box.height / 2;
+            w = box.width;
+            h = box.height;
 
             last_dep = dep;
         }
     }
     //debug error maybe hier
-    pub_msg_.cx = cx;
-    pub_msg_.cy = cy;
-    pub_msg_.dis = dis;
+    PointCloudCreate(cx, cy, w, h, dis);
+}
+void PassDetection::PointCloudCreate(int c_x, int c_y, int w, int h, float dis)
+{
+    int l_x = c_x - w / 2;
+    int r_x = c_x + w / 2;
+    int t_y = c_y - h / 2;
+    int b_y = c_y + h / 2;
+    pass_detector::detection pub_msg_;
+    float pub_x = 0.0;
+    float pub_y = 0.0;
+    float pub_z = 0.0;
+    float pub_dis = 0.0;
+    float sum_x = 0.0;
+    float sum_y = 0.0;
+    float sum_z = 0.0;
+    int count = 0;
+    if (dis != 0.0) {
+        pcl::PointCloud<pcl::PointXYZI>::Ptr points{ new pcl::PointCloud<pcl::PointXYZI> };
+        for (int i = l_x; i < r_x; ++i) {
+            for (int j = t_y; j < b_y; ++j) {
+                float z = image_depth_.at<short int>(cv::Point(i, j)) / 1000.0;
+                if (z >= dis && z < dis + 0.2) {
+
+                    pcl::PointXYZI newPoint;
+                    newPoint.x = z / focal_length_ * (j - u0_);
+                    newPoint.y = z / focal_length_ * (i - v0_);
+                    newPoint.z = z;
+                    //debug here
+                    if (newPoint.y > 0.1) {
+                        sum_x += newPoint.x;
+                        sum_y += newPoint.y;
+                        sum_z += newPoint.z;
+                        count++;
+                    }
+                }
+            }
+        }
+        if (count != 0) {
+
+            tf::Transform transform;
+            transform.setOrigin(tf::Vector3(sum_x / count, sum_y / count, sum_z / count));
+            cout << count << endl;
+            tf::Quaternion q;
+            q.setRPY(0, 0, 0);
+            transform.setRotation(q);
+            br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/kinect2_ir_optical_frame", "/passenger_frame"));
+            //            try {
+            //                lt_.lookupTransform("/vehicle_rear_axle", "/passenger_frame", ros::Time(0), lt_transform_);
+            //            } catch (tf::TransformException& ex) {
+            //                ROS_INFO("%s", ex.what());
+            //                ros::Duration(1.0).sleep();
+            //                ros::spinOnce();
+            //            }
+            //            pub_x = lt_transform_.getOrigin().x();
+            //            pub_y = lt_transform_.getOrigin().y();
+            //            pub_z = lt_transform_.getOrigin().z();
+            //            pub_dis = dis;
+        }
+    }
+
+    pub_msg_.x = pub_x;
+    pub_msg_.y = pub_y;
+    pub_msg_.z = pub_z;
+    pub_msg_.dis = pub_dis;
+
     result_pub_.publish(pub_msg_);
 }
+void PassDetection::infoCb(const sensor_msgs::CameraInfo::ConstPtr& camera_info)
+{
 
+    focal_length_ = camera_info->P[0];
+    u0_ = camera_info->P[2];
+    v0_ = camera_info->P[6];
+
+    //        ROS_INFO_STREAM("focal length: " << focal_length_);
+    //        ROS_INFO_STREAM("u0: " << u0_);
+    //        ROS_INFO_STREAM("v0: " << v0_);
+}
 void PassDetection::drawPred(int classId, float conf, int left, int top, int right, int bottom, Mat& frame, float distance)
 {
 

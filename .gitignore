@@ -1,3 +1,2 @@
-*.weights
 /cv_bridge
 /image_geometry

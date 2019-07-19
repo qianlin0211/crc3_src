@@ -23,6 +23,8 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   message_filters
   message_generation
+  pcl_ros
+  tf
 )
 
 ## System dependencies are found with CMake's conventions

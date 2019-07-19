@@ -29,6 +29,15 @@
 #include <message_filters/sync_policies/approximate_time.h>
 #include <message_filters/synchronizer.h>
 
+#include <pcl/point_cloud.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl_ros/transforms.h>
+#include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
+
+#include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/point_cloud_conversion.h>
 using namespace std;
 using namespace cv;
 using namespace dnn;
@@ -40,9 +49,15 @@ public:
     PassDetection(ros::NodeHandle& node_handle);
 
 private:
+    float focal_length_;
+    float u0_, v0_;
+    tf::StampedTransform lt_transform_;
+    tf::TransformBroadcaster br_;
+    tf::TransformListener lt_;
     ros::NodeHandle node_handle_;
     ros::Publisher result_pub_;
     ros::Publisher detected_image_pub_;
+    ros::Subscriber info_sub_;
     cv::Mat image_depth_;
     message_filters::Subscriber<sensor_msgs::Image> image_color_sub_;
     message_filters::Subscriber<sensor_msgs::Image> image_depth_sub_;
@@ -70,5 +85,7 @@ private:
     void detect_image(Mat& cvframe, string modelWeights, string modelConfiguration, string classesFile, std_msgs::Header header);
     void postprocess(Mat& frame, const vector<Mat>& outs);
     float CaculateDepth(int c_x, int c_y, int w, int h);
+    void PointCloudCreate(int c_x, int c_y, int w, int h, float dis);
+    void infoCb(const sensor_msgs::CameraInfo::ConstPtr& camera_info);
 };
 #endif

@@ -33,25 +33,18 @@ private:
     dynamic_reconfigure::Server<crc3_add_task::DistanceConfig> server;
     dynamic_reconfigure::Server<crc3_add_task::DistanceConfig>::CallbackType f;
     std_msgs::String str_msg;
-    image_geometry::PinholeCameraModel depth_camera_model_;
-    tf::StampedTransform lt_transform_;
-    tf::TransformBroadcaster br_;
-    tf::TransformListener lt_;
     float pass_x;
     float pass_y;
     float pass_z;
     float last_y;
     ros::NodeHandle node_handle_;
     ros::Publisher result_pub_;
-    ros::Subscriber info_sub_;
     ros::Subscriber pos_sub_;
     float y_min;
     float y_max;
     float movement;
     float dis_stop;
-    float mal;
     void Callback(const pass_detector::detection::ConstPtr& msg);
-    void infoCb(const sensor_msgs::CameraInfo::ConstPtr& msg);
     void dynamic_callback(crc3_add_task::DistanceConfig& config, uint32_t level);
 };
 #endif
