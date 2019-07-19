@@ -205,12 +205,10 @@ void PassDetection::PointCloudCreate(int c_x, int c_y, int w, int h, float dis)
                     newPoint.y = z / focal_length_ * (i - v0_);
                     newPoint.z = z;
                     //debug here
-                    if (newPoint.y > 0.1) {
-                        sum_x += newPoint.x;
-                        sum_y += newPoint.y;
-                        sum_z += newPoint.z;
-                        count++;
-                    }
+                    sum_x += newPoint.x;
+                    sum_y += newPoint.y;
+                    sum_z += newPoint.z;
+                    count++;
                 }
             }
         }
@@ -223,17 +221,14 @@ void PassDetection::PointCloudCreate(int c_x, int c_y, int w, int h, float dis)
             q.setRPY(0, 0, 0);
             transform.setRotation(q);
             br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/kinect2_ir_optical_frame", "/passenger_frame"));
-            //            try {
-            //                lt_.lookupTransform("/vehicle_rear_axle", "/passenger_frame", ros::Time(0), lt_transform_);
-            //            } catch (tf::TransformException& ex) {
-            //                ROS_INFO("%s", ex.what());
-            //                ros::Duration(1.0).sleep();
-            //                ros::spinOnce();
-            //            }
-            //            pub_x = lt_transform_.getOrigin().x();
-            //            pub_y = lt_transform_.getOrigin().y();
-            //            pub_z = lt_transform_.getOrigin().z();
-            //            pub_dis = dis;
+            //try {
+            //    lt_.lookupTransform("/camera_top", "/passenger_frame", ros::Time(0), lt_transform_);
+            //} catch (tf::TransformException& ex) {
+            //    ROS_INFO("%s", ex.what());
+            //    ros::Duration(1.0).sleep();
+            //    ros::spinOnce();
+            //}
+            pub_dis = dis;
         }
     }
 

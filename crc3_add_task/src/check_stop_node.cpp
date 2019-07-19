@@ -26,11 +26,17 @@ void CheckStop::Callback(const pass_detector::detection::ConstPtr& msg)
     //cv::imshow(OPENCV_WINDOW, image_gray_);
     //cv::waitKey(3);
     float dis = msg->dis;
-    pass_x = msg->x;
-    pass_y = msg->y;
-    pass_z = msg->z;
-    float dis_c;
     if (dis != 0.0) {
+        try {
+            lt_.lookupTransform("/world", "/passenger_frame", ros::Time(0), lt_transform_);
+        } catch (tf::TransformException& ex) {
+            ROS_INFO("%s", ex.what());
+            ros::Duration(1.0).sleep();
+            ros::spinOnce();
+        }
+        pass_x = lt_transform_.getOrigin().x();
+        pass_y = lt_transform_.getOrigin().y();
+        pass_z = lt_transform_.getOrigin().z();
 
         if (last_y == 0.0) {
             last_y = pass_y;

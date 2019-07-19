@@ -40,6 +40,8 @@ private:
     ros::NodeHandle node_handle_;
     ros::Publisher result_pub_;
     ros::Subscriber pos_sub_;
+    tf::StampedTransform lt_transform_;
+    tf::TransformListener lt_;
     float y_min;
     float y_max;
     float movement;
