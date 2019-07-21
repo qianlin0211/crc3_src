@@ -362,8 +362,8 @@ void SignDetection::drawPred(int classId, float conf, int left, int top, int rig
     //    Scalar(255, 255, 255),
     //    FILLED);
 
-    putText(frame, label, Point(left, top - 7), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 255, 0), 1.5);
-    putText(frame, label_depth, Point(left, top - 30), FONT_HERSHEY_SIMPLEX, 0.6, Scalar(255, 178, 0), 1.5);
+    putText(frame, label, Point(left, top - 7), FONT_HERSHEY_SIMPLEX, 1.0, Scalar(0, 255, 0), 2.0);
+    putText(frame, label_depth, Point(left, top - 30), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 178, 0), 2.0);
 }
 
 vector<String> SignDetection::getOutputsNames(const Net& net)
